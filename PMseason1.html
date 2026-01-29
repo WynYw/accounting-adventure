@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Manufacturing Adventure — Season 1 (Statement of Cost Focus)</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background:#0b1220; color:#e9eefc; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 20px; }
+    .card {
+      background:#121b32; border:1px solid rgba(255,255,255,.08);
+      border-radius:14px; padding:16px; box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    }
+    h1,h2,h3 { margin: 0 0 10px; }
+    h1 { font-size: 22px; }
+    h2 { font-size: 18px; opacity: .95; }
+    p { margin: 8px 0; line-height: 1.45; opacity: .95; }
+    .grid { display:grid; gap:12px; grid-template-columns: 1fr; }
+    @media (min-width: 920px) { .grid { grid-template-columns: 1.1fr .9fr; } }
+    .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    button {
+      background:#1c2b55; color:#e9eefc; border:1px solid rgba(255,255,255,.12);
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:600;
+      transition: transform .05s ease, background .15s ease;
+    }
+    button:hover { background:#22356b; }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .primary { background:#2b4aa8; border-color: rgba(255,255,255,.16); }
+    .primary:hover { background:#3557c2; }
+    .muted { opacity:.75; }
+    .small { font-size: 13px; opacity:.85; }
+    .pillrow { display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 0; }
+    .pill {
+      background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10);
+      padding:6px 10px; border-radius:999px; font-size: 13px;
+    }
+    .mono { font-variant-numeric: tabular-nums; }
+    .hr { height:1px; background:rgba(255,255,255,.10); margin: 12px 0; }
+
+    .reveal { background:#0f1730; border:1px dashed rgba(255,255,255,.16); border-radius:14px; padding:12px; margin-top:12px; }
+    .hidden { display:none; }
+    .danger { color:#ffb1b1; }
+    .ok { color:#b7ffcf; }
+
+    table { width:100%; border-collapse: collapse; margin-top:10px; }
+    th, td { border-bottom: 1px solid rgba(255,255,255,.10); padding: 8px 6px; }
+    th { text-align:left; opacity:.85; font-size: 13px; }
+    td:last-child, th:last-child { text-align:right; }
+    tr.clickable { cursor:pointer; }
+    tr.clickable:hover { background: rgba(255,255,255,.04); }
+    .caret { opacity:.9; margin-right: 6px; display:inline-block; width: 14px; }
+    .workrow td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.10); }
+    .workbox {
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:12px; padding:10px; line-height:1.4;
+    }
+    details { margin-top: 8px; }
+    summary { cursor:pointer; opacity:.9; }
+    summary:hover { opacity: 1; }
+
+    .footer { display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .linkbtn { background:#1c2b55; }
+
+    .rightTitle { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+    .statusLine { margin-top: 8px; }
+    .socHeaderLine { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top: 4px; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Manufacturing Adventure — Season 1 (Statement of Cost Focus)</h1>
+      <p class="muted">
+        Choose A / B / C. You only see the cost impact after selecting.
+        Objective: <b>minimize total Cost of Production (COP)</b> while meeting every <b>output target</b>.
+        Cutting cost “too much” can trigger <b>scrap</b> or <b>complaints</b> → <b>burst</b>.
+      </p>
+      <div class="pillrow">
+        <div class="pill">Replayable</div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:14px;">
+      <!-- LEFT -->
+      <div class="card" id="mainCard">
+        <h2 id="epTitle">Episode</h2>
+        <p id="story"></p>
+
+        <!-- Left pills: Episode + Reason only -->
+        <div class="pillrow mono" id="epMetaPills"></div>
+
+        <div class="btns" id="choiceButtons"></div>
+
+        <div class="reveal hidden" id="revealBox">
+          <h3 style="margin-bottom:6px;">Post-choice reveal</h3>
+          <div id="revealText"></div>
+
+          <div class="hr"></div>
+
+          <div class="footer">
+            <button class="primary" id="nextBtn">Next Episode</button>
+            <button class="linkbtn" id="restartBtn">Restart Season</button>
+          </div>
+        </div>
+
+        <div class="reveal hidden" id="gameOverBox">
+          <h3 class="danger">Game Over — Burst</h3>
+          <div id="gameOverText"></div>
+          <div class="footer">
+            <button class="primary" id="retryBtn">Retry from Episode 1</button>
+          </div>
+          <p class="small muted">“Video deep dive” only appears after Season Complete (not on Game Over).</p>
+        </div>
+
+        <div class="reveal hidden" id="seasonCompleteBox">
+          <h3 class="ok">Season Complete ✅</h3>
+          <div id="seasonSummary"></div>
+          <div class="footer">
+            <button class="primary" id="playAgainBtn">Play Again</button>
+            <button class="linkbtn" id="videoBtn">Video deep dive (placeholder)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card" id="rightPanel">
+        <div class="rightTitle">
+          <h2 style="margin:0;">Dashboard</h2>
+          <div class="small muted mono">Season: 1</div>
+        </div>
+
+        <!-- Total COP shown ONLY here -->
+        <div class="pillrow mono">
+          <div class="pill">Total COP: <span id="totalCop"></span></div>
+          <div class="pill">Quality risk: <span id="qRisk"></span></div>
+          <div class="pill">Scrap: <span id="scrap"></span></div>
+        </div>
+
+        <div class="statusLine small muted" id="statusLine"></div>
+
+        <div class="hr"></div>
+
+        <div class="socHeaderLine">
+          <h3 style="margin:0;">Statement of Cost</h3>
+          <div class="small muted mono" id="socLabel"></div>
+        </div>
+        <div class="small muted">Click a row to reveal the workings (simple explanation). Advanced details are optional.</div>
+        <table class="mono" id="socTable"></table>
+
+        <div class="hr"></div>
+
+        <h3 style="margin:0 0 6px;">Cost model (current)</h3>
+        <div class="small muted mono" id="costModelBox"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- Utilities ----------
+  const fmt = (n) => (Math.round(n * 100) / 100).toLocaleString(undefined, {maximumFractionDigits: 2});
+  const ceil = (n) => Math.ceil(n);
+  const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- Season Settings ----------
+  const targets = [0, 0, 220, 260, 280, 300, 320, 320, 340]; // index by episode
+  const reasons = [
+    "",
+    "Setup week (no production).",
+    "Pilot order.",
+    "Forecast raised after pilot success.",
+    "New customer trial order.",
+    "Peak demand week.",
+    "Orders locked (penalties if short).",
+    "Repeat order (customer scrutiny).",
+    "Final rush shipment."
+  ];
+
+  // ---------- Game State ----------
+  let state;
+
+  function resetState() {
+    state = {
+      ep: 1,
+      totalCOP: 0,
+
+      // cost rates
+      dmUnit: 30,
+      dlUnit: 18,
+      deUnit: 4,
+      vohUnit: 10,
+      fixedFOH: 9000,
+
+      // capacity
+      baseCap: 380,
+
+      // risk + scrap (burst thresholds)
+      scrapRate: 0.00,  // burst if >= 3%
+      qualityRisk: 0,   // burst if >= 3
+      complaintFlag: false, // informational
+
+      // flags
+      choseCheapSupplier: false,
+      vohAdjActive: false, // training effect Ep5–Ep8
+      dmAdjActive: false,  // workshop effect Ep6–Ep8
+      dlAdjActive: false,  // line balancing effect Ep7–Ep8
+
+      // last SOC record should persist across episodes
+      lastRecord: null
+    };
+  }
+
+  // ---------- Episodes ----------
+  const episodes = [
+    null,
+    {
+      title: "Episode 1 — Set up your factory",
+      story:
+        "You choose your facility. Finance wants low fixed costs, but Operations warns fragile setups cause problems later. " +
+        "This locks your fixed factory overhead and season capacity.",
+      options: [
+        { key: "A", text: "Deposit 5,000; Fixed FOH 9,000/episode; Capacity 380." },
+        { key: "B", text: "Deposit 2,000; Fixed FOH 6,000/episode; Capacity 330." },
+        { key: "C", text: "Deposit 10,000; Fixed FOH 12,000/episode; Capacity 450." }
+      ]
+    },
+    {
+      title: "Episode 2 — Materials sourcing (pilot order)",
+      story:
+        "A pilot run tests supplier quality. Cheaper materials can look good in COP but increase scrap and complaints later. " +
+        "Choose how you source Direct Materials.",
+      options: [
+        { key: "A", text: "Standard supplier: DM 30/unit; extra cost 0." },
+        { key: "B", text: "Bulk discount: handling/storage 8,000; DM becomes 28/unit from now on." },
+        { key: "C", text: "Cheapest supplier: DM becomes 26/unit from now on (riskier)." }
+      ]
+    },
+    {
+      title: "Episode 3 — Ramp-up decision (forecast increases)",
+      story:
+        "The forecast rises after pilot success. You can invest in training, push overtime, or do nothing and accept rising waste later. " +
+        "This is about incremental cost vs future rework/scrap.",
+      options: [
+        { key: "A", text: "Training: pay 3,000 now (reduce rework later)." },
+        { key: "B", text: "Overtime: DL +5/unit this episode only." },
+        { key: "C", text: "Do nothing: pay 0 now (hidden wastage later)." }
+      ]
+    },
+    {
+      title: "Episode 4 — Quality control vs “cost cutting”",
+      story:
+        "A trial order includes strict inspection. Cutting inspection can reduce FOH now, but raises quality and scrap risk. " +
+        "Choose how you handle QC.",
+      options: [
+        { key: "A", text: "Keep inspection: FOH +1,500 this episode." },
+        { key: "B", text: "Reduce inspection: FOH -1,000 this episode (riskier)." },
+        { key: "C", text: "Process workshop: pay 2,500 now (improve materials later)." }
+      ]
+    },
+    {
+      title: "Episode 5 — Maintenance and the sunk cost trap",
+      story:
+        "Someone mentions last quarter’s 7,000 equipment study (sunk cost). Ignore it. Today’s relevant decision is maintenance vs running hot. " +
+        "This affects waste later.",
+      options: [
+        { key: "A", text: "Preventive maintenance: pay 2,000 now." },
+        { key: "B", text: "Skip maintenance: pay 0 now (risk later)." },
+        { key: "C", text: "Replace worn part only: pay 1,200 now." }
+      ]
+    },
+    {
+      title: "Episode 6 — Locked orders (output must hit)",
+      story:
+        "Orders are locked. Scrap can now cause missed targets. Cutting spec may reduce cost now but trigger complaints. " +
+        "You must deliver the target output.",
+      options: [
+        { key: "A", text: "Standard spec: no changes." },
+        { key: "B", text: "Cost-cut spec: DM -3/unit this episode only (riskier)." },
+        { key: "C", text: "Line balancing: pay 1,800 now; DL -2/unit in Ep7–Ep8." }
+      ]
+    },
+    {
+      title: "Episode 7 — Response to early complaints / instability",
+      story:
+        "Customer feedback is coming in. You can pay for containment, ignore it, or audit suppliers. " +
+        "This is about relevant incremental cost to avoid bigger failures.",
+      options: [
+        { key: "A", text: "Containment & sorting: pay 2,400 now." },
+        { key: "B", text: "Continue as-is: pay 0 now." },
+        { key: "C", text: "Supplier audit: pay 3,500 now (most useful if supplier quality is the root cause)." }
+      ]
+    },
+    {
+      title: "Episode 8 — Finale (reputation test)",
+      story:
+        "Final shipment window. Management judges your COP and whether you met output without complaints exploding. " +
+        "Low COP is meaningless if the customer churns.",
+      options: [
+        { key: "A", text: "Final quality push: FOH +3,000 this episode." },
+        { key: "B", text: "“Numbers look good” push: FOH -1,500 this episode (riskier)." },
+        { key: "C", text: "Rework sprint: DL +4/unit this episode (stabilize quality)." }
+      ]
+    }
+  ];
+
+  // ---------- Derived Adjustments ----------
+  function currentDmUnit(ep, optKey=null) {
+    let dm = state.dmUnit;
+    if (state.dmAdjActive && ep >= 6) dm -= 2;       // workshop
+    if (ep === 6 && optKey === "B") dm -= 3;         // spec cut
+    return Math.max(0, dm);
+  }
+  function currentDlUnit(ep, optKey=null) {
+    let dl = state.dlUnit;
+    if (ep === 3 && optKey === "B") dl += 5;         // overtime
+    if (state.dlAdjActive && ep >= 7) dl -= 2;       // line balancing
+    if (ep === 8 && optKey === "C") dl += 4;         // rework sprint
+    return Math.max(0, dl);
+  }
+  function currentVohUnit(ep) {
+    let voh = state.vohUnit;
+    if (state.vohAdjActive && ep >= 5) voh -= 2;     // training
+    return Math.max(0, voh);
+  }
+  function effectiveCapacity() { return state.baseCap; } // stable capacity; scrap makes PU rise
+  function neededProduction(target, scrapRate) {
+    const sr = clamp(scrapRate, 0, 0.30);
+    const pu = (target <= 0) ? 0 : ceil(target / (1 - sr));
+    const extra = Math.max(0, pu - target);
+    return { pu, extra, sr };
+  }
+
+  // ---------- SOC Calculation ----------
+  function computeSOC(ep, optKey) {
+    const target = targets[ep];
+    const cap = effectiveCapacity();
+    const { pu, extra, sr } = neededProduction(target, state.scrapRate);
+
+    let fohOneOff = 0;
+    if (ep === 2 && optKey === "B") fohOneOff += 8000;
+    if (ep === 3 && optKey === "A") fohOneOff += 3000;
+    if (ep === 4 && optKey === "A") fohOneOff += 1500;
+    if (ep === 4 && optKey === "B") fohOneOff -= 1000;
+    if (ep === 4 && optKey === "C") fohOneOff += 2500;
+    if (ep === 5 && optKey === "A") fohOneOff += 2000;
+    if (ep === 5 && optKey === "C") fohOneOff += 1200;
+    if (ep === 6 && optKey === "C") fohOneOff += 1800;
+    if (ep === 7 && optKey === "A") fohOneOff += 2400;
+    if (ep === 7 && optKey === "C") fohOneOff += 3500;
+    if (ep === 8 && optKey === "A") fohOneOff += 3000;
+    if (ep === 8 && optKey === "B") fohOneOff -= 1500;
+
+    const dmU = currentDmUnit(ep, optKey);
+    const dlU = currentDlUnit(ep, optKey);
+    const deU = state.deUnit;
+    const vohU = currentVohUnit(ep);
+
+    const DM = pu * dmU;
+    const DL = pu * dlU;
+    const DE = pu * deU;
+    const prime = DM + DL + DE;
+
+    const FOH = (ep >= 2 ? state.fixedFOH : 0) + (pu * vohU) + fohOneOff;
+    const COP = prime + FOH;
+
+    const achievedTarget = (pu <= cap);
+
+    return {
+      ep, target, cap,
+      scrapRate: sr,
+      pu, extra, achievedTarget,
+      dmU, dlU, deU, vohU,
+      fixedFOH: (ep >= 2 ? state.fixedFOH : 0),
+      fohOneOff,
+      DM, DL, DE, prime, FOH, COP
+    };
+  }
+
+  // ---------- Apply Choice Effects ----------
+  function applyChoiceEffects(ep, optKey, notes) {
+    if (ep === 1) {
+      // Treat as setup choice (no cash model). We keep narrative "deposit" but do not track budget.
+      if (optKey === "A") {
+        state.fixedFOH = 9000; state.baseCap = 380;
+        notes.push("Setup chosen: Fixed FOH set to 9,000/episode. Capacity set to 380.");
+      } else if (optKey === "B") {
+        state.fixedFOH = 6000; state.baseCap = 330;
+        notes.push("Setup chosen: Fixed FOH set to 6,000/episode. Capacity set to 330 (tighter).");
+      } else {
+        state.fixedFOH = 12000; state.baseCap = 450;
+        notes.push("Setup chosen: Fixed FOH set to 12,000/episode. Capacity set to 450 (strong).");
+      }
+      return;
+    }
+
+    if (ep === 2) {
+      if (optKey === "A") {
+        state.dmUnit = 30;
+        notes.push("DM stays 30/unit (stable quality baseline).");
+      } else if (optKey === "B") {
+        state.dmUnit = 28;
+        notes.push("Bulk discount: DM becomes 28/unit from now on. Handling/storage is counted in this episode’s overheads.");
+      } else {
+        state.dmUnit = 26;
+        state.scrapRate += 0.01;
+        state.qualityRisk += 1;
+        state.complaintFlag = true;
+        state.choseCheapSupplier = true;
+        notes.push("Cheapest supplier: DM becomes 26/unit. Scrap +1% and Quality risk +1 (higher complaint chance).");
+      }
+      return;
+    }
+
+    if (ep === 3) {
+      if (optKey === "A") {
+        state.vohAdjActive = true;
+        notes.push("Training: adds cost now, but reduces future rework overheads (Ep5–Ep8).");
+      } else if (optKey === "B") {
+        notes.push("Overtime: higher labour cost this episode only.");
+      } else {
+        state.scrapRate += 0.03;
+        notes.push("Do nothing: scrap jumps up (waste increases).");
+      }
+      return;
+    }
+
+    if (ep === 4) {
+      if (optKey === "A") {
+        notes.push("Keep inspection: prevention cost this episode; helps avoid complaints.");
+      } else if (optKey === "B") {
+        state.qualityRisk += 1;
+        state.scrapRate += 0.01;
+        state.complaintFlag = true;
+        notes.push("Reduce inspection: cost looks lower now, but complaints and waste risk increase.");
+      } else {
+        state.dmAdjActive = true;
+        notes.push("Process workshop: cost now, but improves material usage later (Ep6–Ep8).");
+      }
+      return;
+    }
+
+    if (ep === 5) {
+      notes.push("Reminder: last quarter’s 7,000 equipment study is a SUNK cost (irrelevant today).");
+      if (optKey === "A") {
+        state.scrapRate -= 0.02;
+        notes.push("Preventive maintenance: reduces waste (scrap improves).");
+      } else if (optKey === "B") {
+        state.qualityRisk += 1;
+        state.complaintFlag = true;
+        notes.push("Skip maintenance: saves money now, but complaints risk increases.");
+      } else {
+        notes.push("Replace part: improves reliability, but doesn’t reduce waste much.");
+      }
+      state.scrapRate = clamp(state.scrapRate, 0, 0.30);
+      return;
+    }
+
+    if (ep === 6) {
+      if (optKey === "A") {
+        notes.push("Standard spec: stable path.");
+      } else if (optKey === "B") {
+        state.qualityRisk += 1;
+        state.complaintFlag = true;
+        state.scrapRate += 0.02;
+        notes.push("Cost-cut spec: lower material cost now, but complaints and waste increase.");
+      } else {
+        state.dlAdjActive = true;
+        notes.push("Line balancing: cost now, but labour becomes more efficient later (Ep7–Ep8).");
+      }
+      state.scrapRate = clamp(state.scrapRate, 0, 0.30);
+      return;
+    }
+
+    if (ep === 7) {
+      if (optKey === "A") {
+        state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+        state.scrapRate = Math.max(0, state.scrapRate - 0.01);
+        notes.push("Containment: reduces complaints and waste immediately.");
+      } else if (optKey === "B") {
+        notes.push("Continue as-is: no immediate cost. Risk remains.");
+      } else {
+        if (state.choseCheapSupplier) {
+          state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+          state.scrapRate = Math.max(0, state.scrapRate - 0.005);
+          notes.push("Supplier audit: useful because supplier quality was a known risk earlier.");
+        } else {
+          notes.push("Supplier audit: may have limited benefit if supplier quality was not the root cause.");
+        }
+      }
+      state.scrapRate = clamp(state.scrapRate, 0, 0.30);
+      return;
+    }
+
+    if (ep === 8) {
+      if (optKey === "A") {
+        if (state.qualityRisk > 0) state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+        notes.push("Final quality push: reduces complaint risk, but costs more this episode.");
+      } else if (optKey === "B") {
+        state.qualityRisk += 1;
+        state.scrapRate += 0.01;
+        state.complaintFlag = true;
+        notes.push("Numbers-first: cost looks lower, but complaints and waste risk increase.");
+      } else {
+        if (state.qualityRisk > 0) state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+        notes.push("Rework sprint: stabilizes quality, but labour cost rises this episode.");
+      }
+      state.scrapRate = clamp(state.scrapRate, 0, 0.30);
+      return;
+    }
+  }
+
+  // ---------- Burst Rules (Immediate after choice) ----------
+  function immediateBurstCheck() {
+    if (state.scrapRate >= 0.03) {
+      return { burst: true, reason: `Waste out of control: scrap reached ${fmt(state.scrapRate * 100)}% (threshold ≥ 3%).` };
+    }
+    if (state.qualityRisk >= 3) {
+      return { burst: true, reason: `Customer complaints exploded: quality risk = ${state.qualityRisk} (threshold ≥ 3).` };
+    }
+    return { burst: false, reason: "" };
+  }
+  function outputBurstCheck(rec) {
+    if (!rec.achievedTarget) {
+      return { burst: true, reason: `Failed output target: needed production ${rec.pu} units exceeds capacity ${rec.cap}.` };
+    }
+    return { burst: false, reason: "" };
+  }
+
+  // ---------- Main Step ----------
+  function chooseOption(ep, optKey) {
+    [...$("choiceButtons").querySelectorAll("button")].forEach(b => b.disabled = true);
+
+    $("revealBox").classList.add("hidden");
+    $("gameOverBox").classList.add("hidden");
+    $("seasonCompleteBox").classList.add("hidden");
+
+    const notes = [];
+    applyChoiceEffects(ep, optKey, notes);
+
+    const imm = immediateBurstCheck();
+
+    const rec = computeSOC(ep, optKey);
+    state.lastRecord = rec;
+
+    if (ep >= 2) state.totalCOP += rec.COP;
+
+    updateRightPanel();
+
+    if (imm.burst) return endGameOver(imm.reason);
+
+    const out = outputBurstCheck(rec);
+    if (out.burst) return endGameOver(out.reason);
+
+    if (ep === 8) return endSeasonComplete();
+
+    showReveal(notes, rec);
+  }
+
+  // ---------- UI Rendering ----------
+  function renderEpisode() {
+    const ep = state.ep;
+    $("epTitle").textContent = episodes[ep].title;
+    $("story").textContent = episodes[ep].story;
+
+    const pills = [];
+    pills.push(`<div class="pill">Episode ${ep} of 8</div>`);
+    pills.push(`<div class="pill">${escapeHtml(reasons[ep])}</div>`);
+    $("epMetaPills").innerHTML = pills.join("");
+
+    const btns = $("choiceButtons");
+    btns.innerHTML = "";
+    episodes[ep].options.forEach(opt => {
+      const b = document.createElement("button");
+      b.textContent = `Option ${opt.key}: ${opt.text}`;
+      b.onclick = () => chooseOption(ep, opt.key);
+      btns.appendChild(b);
+    });
+
+    $("revealBox").classList.add("hidden");
+    $("gameOverBox").classList.add("hidden");
+    $("seasonCompleteBox").classList.add("hidden");
+
+    // Persist SOC
+    renderSocTable(state.lastRecord);
+    updateRightPanel();
+  }
+
+  function updateRightPanel() {
+    $("totalCop").textContent = fmt(state.totalCOP);
+    $("qRisk").textContent = `${state.qualityRisk}${state.complaintFlag ? " (watch complaints)" : ""}`;
+    $("scrap").textContent = `${fmt(state.scrapRate * 100)}%`;
+
+    const ep = state.ep;
+    const target = targets[ep];
+    const cap = effectiveCapacity();
+    const need = neededProduction(target, state.scrapRate);
+
+    const statusBits = [];
+    statusBits.push(`Target: ${fmt(target)} good units`);
+    statusBits.push(`Needed production units: ${fmt(need.pu)}${need.extra > 0 ? ` (extra ${fmt(need.extra)} due to waste)` : ""}`);
+    statusBits.push(`Capacity: ${fmt(cap)}`);
+
+    if (target > 0) statusBits.push(need.pu <= cap ? "Status: OK (based on current scrap)" : "Status: AT RISK (current scrap may break output)");
+
+    statusBits.push(`Burst thresholds: scrap ≥ 3% OR quality risk ≥ 3.`);
+
+    $("statusLine").innerHTML = statusBits.map(x => `• ${escapeHtml(x)}`).join("<br/>");
+    $("socLabel").textContent = state.lastRecord ? `Last episode result (Ep ${state.lastRecord.ep})` : "No result yet";
+
+    const lines = [];
+    lines.push(`DM/unit: ${fmt(state.dmUnit)}${state.dmAdjActive ? " (workshop improves Ep6–8)" : ""}`);
+    lines.push(`DL/unit: ${fmt(state.dlUnit)}${state.dlAdjActive ? " (line balancing improves Ep7–8)" : ""}`);
+    lines.push(`DE/unit: ${fmt(state.deUnit)}`);
+    lines.push(`Var FOH/unit: ${fmt(state.vohUnit)}${state.vohAdjActive ? " (training improves Ep5–8)" : ""}`);
+    lines.push(`Fixed FOH/episode: ${fmt(state.fixedFOH)}`);
+    lines.push(`Capacity: ${fmt(state.baseCap)}`);
+    $("costModelBox").innerHTML = lines.map(x => escapeHtml(x)).join("<br/>");
+  }
+
+  function showReveal(notes, rec) {
+    const lines = [];
+    notes.forEach(n => lines.push(`• ${n}`));
+
+    if (rec.ep >= 2) {
+      if (rec.extra > 0) {
+        lines.push(`• Waste effect: to deliver ${rec.target} good units with ${fmt(rec.scrapRate*100)}% scrap, you produced ${rec.extra} extra units (total ${rec.pu}).`);
+      } else {
+        lines.push(`• Waste effect: scrap is ${fmt(rec.scrapRate*100)}%, so you produced exactly ${rec.pu} units to meet the target.`);
+      }
+      lines.push(`• Output check: ✅ target met.`);
+      lines.push(`• This episode COP = ${fmt(rec.COP)}. Total COP so far = ${fmt(state.totalCOP)}.`);
+      lines.push(`• Quality risk now = ${state.qualityRisk}. Scrap now = ${fmt(state.scrapRate*100)}%.`);
+    } else {
+      lines.push("• Setup week: no production yet.");
+    }
+
+    $("revealText").innerHTML = lines.map(x => `<div>${escapeHtml(x)}</div>`).join("");
+
+    renderSocTable(rec);
+    updateRightPanel();
+
+    $("revealBox").classList.remove("hidden");
+    $("nextBtn").onclick = () => { if (state.ep < 8) { state.ep += 1; renderEpisode(); } };
+    $("restartBtn").onclick = () => { resetState(); renderEpisode(); };
+  }
+
+  // ---------- SOC Table ----------
+  function renderSocTable(rec) {
+    const t = $("socTable");
+    if (!rec) {
+      t.innerHTML = `
+        <thead><tr><th>Particulars</th><th>Amount</th></tr></thead>
+        <tbody>
+          <tr><td class="muted">No episode result yet</td><td class="muted">—</td></tr>
+        </tbody>
+      `;
+      return;
+    }
+
+    const commonTop = `
+      <div>Target: ${fmt(rec.target)} good units</div>
+      <div>Scrap: ${fmt(rec.scrapRate*100)}% → extra produced: ${fmt(rec.extra)} units</div>
+      <div>Total produced: ${fmt(rec.pu)} units</div>
+    `;
+
+    const advPU = `
+      <details>
+        <summary>Advanced details</summary>
+        <div class="muted" style="margin-top:6px;">
+          Game calculation (not a syllabus formula): needed production is computed from target and scrap rate.
+        </div>
+      </details>
+    `;
+
+    const rows = [];
+    function addRow(label, amount, workHtml) {
+      const id = `work_${label.replace(/\W+/g,'_')}_${rec.ep}`;
+      rows.push(`
+        <tr class="clickable" data-work="${id}">
+          <td><span class="caret">▶</span>${escapeHtml(label)}</td>
+          <td>${fmt(amount)}</td>
+        </tr>
+        <tr class="workrow hidden" id="${id}">
+          <td colspan="2"><div class="workbox small mono">${workHtml}</div></td>
+        </tr>
+      `);
+    }
+
+    addRow("Direct Materials", rec.DM, `
+      ${commonTop}
+      <div>DM/unit: ${fmt(rec.dmU)}</div>
+      <div>DM cost = ${fmt(rec.pu)} × ${fmt(rec.dmU)} = ${fmt(rec.DM)}</div>
+      ${advPU}
+    `);
+
+    addRow("Direct Labour", rec.DL, `
+      ${commonTop}
+      <div>DL/unit: ${fmt(rec.dlU)}</div>
+      <div>DL cost = ${fmt(rec.pu)} × ${fmt(rec.dlU)} = ${fmt(rec.DL)}</div>
+      ${advPU}
+    `);
+
+    addRow("Direct Expenses", rec.DE, `
+      ${commonTop}
+      <div>DE/unit: ${fmt(rec.deU)}</div>
+      <div>DE cost = ${fmt(rec.pu)} × ${fmt(rec.deU)} = ${fmt(rec.DE)}</div>
+      ${advPU}
+    `);
+
+    addRow("Prime Cost", rec.prime, `
+      <div>Prime Cost = DM + DL + DE</div>
+      <div>= ${fmt(rec.DM)} + ${fmt(rec.DL)} + ${fmt(rec.DE)} = ${fmt(rec.prime)}</div>
+    `);
+
+    addRow("Factory Overheads", rec.FOH, `
+      ${commonTop}
+      <div>Fixed FOH (this episode): ${fmt(rec.fixedFOH)}</div>
+      <div>Variable FOH/unit: ${fmt(rec.vohU)}</div>
+      <div>Variable FOH = ${fmt(rec.pu)} × ${fmt(rec.vohU)} = ${fmt(rec.pu * rec.vohU)}</div>
+      <div>One-off overheads (this episode): ${fmt(rec.fohOneOff)}</div>
+      <div>Factory Overheads = ${fmt(rec.fixedFOH)} + ${fmt(rec.pu * rec.vohU)} + ${fmt(rec.fohOneOff)} = ${fmt(rec.FOH)}</div>
+      <details>
+        <summary>Advanced details</summary>
+        <div class="muted" style="margin-top:6px;">
+          One-off overheads reflect the specific decision you selected for that episode.
+        </div>
+      </details>
+    `);
+
+    addRow("Cost of Production", rec.COP, `
+      <div>COP = Prime Cost + Factory Overheads</div>
+      <div>= ${fmt(rec.prime)} + ${fmt(rec.FOH)} = ${fmt(rec.COP)}</div>
+      <details>
+        <summary>Advanced details</summary>
+        <div class="muted" style="margin-top:6px;">
+          Output success is checked using needed production units vs capacity.
+        </div>
+      </details>
+    `);
+
+    t.innerHTML = `
+      <thead><tr><th>Particulars</th><th>Amount</th></tr></thead>
+      <tbody>${rows.join("")}</tbody>
+    `;
+
+    [...t.querySelectorAll("tr.clickable")].forEach(tr => {
+      tr.addEventListener("click", () => {
+        const id = tr.getAttribute("data-work");
+        const workRow = document.getElementById(id);
+        const caret = tr.querySelector(".caret");
+        const open = !workRow.classList.contains("hidden");
+        workRow.classList.toggle("hidden");
+        caret.textContent = open ? "▶" : "▼";
+      });
+    });
+  }
+
+  // ---------- End States ----------
+  function endGameOver(reason) {
+    $("revealBox").classList.add("hidden");
+    $("gameOverBox").classList.remove("hidden");
+
+    $("gameOverText").innerHTML = `
+      <p class="danger"><b>Reason:</b> ${escapeHtml(reason)}</p>
+      <p class="muted mono">
+        Snapshot: Total COP ${fmt(state.totalCOP)} | Scrap ${fmt(state.scrapRate*100)}% | Quality risk ${state.qualityRisk}
+      </p>
+    `;
+
+    $("retryBtn").onclick = () => { resetState(); renderEpisode(); };
+    updateRightPanel();
+  }
+
+  function endSeasonComplete() {
+    $("revealBox").classList.add("hidden");
+    $("seasonCompleteBox").classList.remove("hidden");
+
+    $("seasonSummary").innerHTML = `
+      <p class="mono">
+        <b>Total COP (Ep2–Ep8):</b> ${fmt(state.totalCOP)}<br/>
+        <b>Final scrap rate:</b> ${fmt(state.scrapRate*100)}%<br/>
+        <b>Final quality risk:</b> ${state.qualityRisk}
+      </p>
+      <p class="muted small">Video deep dive appears only here (not on Game Over).</p>
+    `;
+
+    $("videoBtn").onclick = () => alert("Video deep dive (placeholder). Add your embed/link here later.");
+    $("playAgainBtn").onclick = () => { resetState(); renderEpisode(); };
+
+    updateRightPanel();
+  }
+
+  // ---------- Helpers ----------
+  function escapeHtml(s) {
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  // ---------- Boot ----------
+  resetState();
+  renderEpisode();
+})();
+</script>
+</body>
+</html>
