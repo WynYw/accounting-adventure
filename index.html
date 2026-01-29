@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KopiKart Adventure (Strategic Build)</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#121a33; --muted:#9fb0ff; --text:#eaf0ff;
+      --accent:#7aa7ff; --danger:#ff6b6b; --ok:#46d39a; --line:#25305a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background: radial-gradient(1200px 800px at 15% 10%, #18234a 0%, var(--bg) 55%, #070a14 100%);
+      color:var(--text);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:18px;}
+    header{
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+      padding:16px 16px; border:1px solid var(--line); background:rgba(18,26,51,.9);
+      border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    header h1{margin:0; font-size:18px; letter-spacing:.2px}
+    header .sub{margin-top:6px; color:var(--muted); font-size:13px; line-height:1.35}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap}
+    button{
+      border:1px solid var(--line); background:#0f1730; color:var(--text);
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:600;
+    }
+    button:hover{border-color:#3a4aa3}
+    button:disabled{opacity:.5; cursor:not-allowed}
+
+    .grid{display:grid; grid-template-columns:1.05fr .95fr; gap:14px; margin-top:14px;}
+    @media (max-width: 920px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      border:1px solid var(--line); background:rgba(18,26,51,.9);
+      border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .kicker{color:var(--muted); font-size:12px; letter-spacing:.2px; text-transform:uppercase}
+    .episodeTitle{margin:6px 0 10px; font-size:18px}
+    .story{color:#dbe6ff; line-height:1.55; font-size:14px}
+
+    .choices{margin-top:14px; display:grid; gap:10px}
+    .choice{
+      text-align:left; padding:12px 12px; border-radius:14px;
+      border:1px solid var(--line); background:#0f1730;
+    }
+    .choice b{display:block; margin-bottom:4px}
+    .choice small{color:var(--muted)}
+    .choice:hover{border-color:#3a4aa3}
+
+    .reveal{
+      margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;
+      display:none;
+    }
+    .reveal.show{display:block}
+    .reveal .msg{padding:12px; border-radius:14px; border:1px solid var(--line); background:#0f1730}
+    .reveal .msg.ok{border-color:rgba(70,211,154,.35)}
+    .reveal .msg.danger{border-color:rgba(255,107,107,.35)}
+    .reveal h3{margin:0 0 6px; font-size:14px}
+    .reveal p{margin:0; color:#dbe6ff; line-height:1.45; font-size:13px}
+    .nextRow{margin-top:10px; display:flex; gap:10px; flex-wrap:wrap}
+
+    .bars{display:grid; gap:12px; margin-top:10px}
+    .barRow{
+      display:grid; grid-template-columns:130px 1fr 110px; gap:10px; align-items:center;
+    }
+    .barLabel{color:#dbe6ff; font-weight:700; font-size:13px}
+    .barTrack{
+      height:14px; border-radius:999px; background:#0f1730; border:1px solid var(--line);
+      overflow:hidden;
+    }
+    .barFill{
+      height:100%; width:0%;
+      background: linear-gradient(90deg, rgba(122,167,255,.95), rgba(122,167,255,.45));
+      transition: width 420ms ease;
+    }
+    .barVal{font-variant-numeric: tabular-nums; text-align:right; color:#dbe6ff; font-weight:700}
+
+    .eq{
+      margin-top:14px; padding:12px; border-radius:14px; border:1px solid var(--line); background:#0f1730;
+      display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:center;
+      font-variant-numeric: tabular-nums;
+    }
+    .eq .left{color:#dbe6ff; font-weight:800}
+    .eq .right{color:var(--muted); font-weight:700}
+    .eq.good{border-color:rgba(70,211,154,.4)}
+    .eq.bad{border-color:rgba(255,107,107,.4)}
+
+    .breakdown{margin-top:12px; border-top:1px dashed var(--line); padding-top:12px}
+    .table{width:100%; border-collapse:separate; border-spacing:0 10px; font-size:13px}
+    .table td{
+      padding:12px 12px; background:#0f1730; border:1px solid var(--line);
+      vertical-align:top;
+    }
+    .table td:first-child{border-radius:14px 0 0 14px; color:#dbe6ff; width:56%}
+    .table td:last-child{border-radius:0 14px 14px 0; text-align:right; font-variant-numeric:tabular-nums}
+    .groupHead{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .groupHead .title{
+      color:var(--muted); font-size:12px; letter-spacing:.2px; text-transform:uppercase; font-weight:800;
+    }
+    .groupHead .totalLabel{color:var(--muted); font-size:12px; font-weight:800;}
+    .stack{display:grid; gap:6px;}
+    .stack .item{color:#dbe6ff; font-weight:700; font-size:13px;}
+    .stack .val{color:#dbe6ff; font-weight:800; font-size:13px;}
+    .totVal{color:#eaf0ff; font-weight:900; font-size:14px; margin-bottom:10px;}
+
+    .log{margin-top:12px; max-height:260px; overflow:auto; padding-right:6px;}
+    .logItem{
+      margin-bottom:8px; padding:10px 12px; border-radius:14px; border:1px solid var(--line); background:#0f1730;
+      color:#dbe6ff; font-size:13px; line-height:1.35;
+    }
+    .tag{
+      display:inline-block; padding:3px 8px; border-radius:999px; font-size:11px; margin-right:8px;
+      border:1px solid var(--line); color:var(--muted);
+    }
+    .tag.bad{color:var(--danger); border-color:rgba(255,107,107,.35)}
+    .tag.ok{color:var(--ok); border-color:rgba(70,211,154,.35)}
+    .footerNote{margin-top:10px; color:var(--muted); font-size:12px; line-height:1.4}
+
+    /* Deep dive box (ONLY after season complete) */
+    .videoBox{
+      margin-top:14px; padding:12px; border-radius:14px; border:1px solid var(--line); background:#0f1730; display:none;
+    }
+    .videoBox.show{display:block}
+    a{color:var(--accent)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>KopiKart Adventure (Strategic Build)</h1>
+        <div class="sub">
+          Choose one option per episode. You will only see the accounting impact <b>after</b> you click.<br>
+          Bars show <b>Assets / Liabilities / Equity</b>. Profit accumulates into Equity.
+        </div>
+      </div>
+      <div class="btnrow">
+        <button id="btnReset">Reset run</button>
+        <button id="btnSkip" title="For testing only">Skip to next episode</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: story + choices -->
+      <section class="card">
+        <div class="kicker" id="epKicker">Episode</div>
+        <div class="episodeTitle" id="epTitle">—</div>
+        <div class="story" id="epStory">—</div>
+
+        <div class="choices" id="choices"></div>
+
+        <div class="reveal" id="reveal">
+          <div class="msg ok" id="revealBox">
+            <h3 id="revealTitle">Impact revealed</h3>
+            <p id="revealText">—</p>
+          </div>
+          <div class="nextRow">
+            <button id="btnNext">Next episode</button>
+            <button id="btnShowBreakdown">Toggle breakdown</button>
+          </div>
+        </div>
+
+        <!-- Only shows AFTER season complete (not on game over) -->
+        <div class="videoBox" id="videoBox">
+          <div class="kicker">Video deep dive</div>
+          <div class="footerNote">
+            <a href="#" onclick="return false;">Full breakdown</a> — how to get the highest profit (without going bankrupt) from Episode 1 to Episode 8.
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: bars + breakdown + log -->
+      <section class="card">
+        <div class="kicker">Balance sheet bars</div>
+
+        <div class="bars">
+          <div class="barRow">
+            <div class="barLabel">Assets</div>
+            <div class="barTrack"><div class="barFill" id="barA"></div></div>
+            <div class="barVal" id="valA">0</div>
+          </div>
+          <div class="barRow">
+            <div class="barLabel">Liabilities</div>
+            <div class="barTrack"><div class="barFill" id="barL"></div></div>
+            <div class="barVal" id="valL">0</div>
+          </div>
+          <div class="barRow">
+            <div class="barLabel">Equity</div>
+            <div class="barTrack"><div class="barFill" id="barE"></div></div>
+            <div class="barVal" id="valE">0</div>
+          </div>
+        </div>
+
+        <div class="eq" id="eqBox">
+          <div class="left">Assets = Liabilities + Equity</div>
+          <div class="right" id="eqRight">0 = 0 + 0</div>
+        </div>
+
+        <div class="breakdown" id="breakdown" style="display:none">
+          <div class="kicker">Internal breakdown (for you)</div>
+          <table class="table" aria-label="breakdown">
+            <tbody>
+              <tr>
+                <td>
+                  <div class="groupHead">
+                    <div class="title">Assets</div>
+                    <div class="totalLabel">Total</div>
+                  </div>
+                  <div class="stack">
+                    <div class="item">Cash</div>
+                    <div class="item">Inventory</div>
+                    <div class="item">Receivable</div>
+                    <div class="item">Other assets</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="totVal" id="bAssetsTotal">0</div>
+                  <div class="stack" style="justify-items:end;">
+                    <div class="val" id="bCash">0</div>
+                    <div class="val" id="bInv">0</div>
+                    <div class="val" id="bAR">0</div>
+                    <div class="val" id="bOther">0</div>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="groupHead">
+                    <div class="title">Liabilities</div>
+                    <div class="totalLabel">Total</div>
+                  </div>
+                  <div class="stack">
+                    <div class="item">Accounts Payable</div>
+                    <div class="item">Loan Payable</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="totVal" id="bLiabTotal">0</div>
+                  <div class="stack" style="justify-items:end;">
+                    <div class="val" id="bAP">0</div>
+                    <div class="val" id="bLoan">0</div>
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="groupHead">
+                    <div class="title">Equity</div>
+                    <div class="totalLabel">Total</div>
+                  </div>
+                  <div class="stack">
+                    <div class="item">Owner Capital</div>
+                    <div class="item">Profit</div>
+                  </div>
+                </td>
+                <td>
+                  <div class="totVal" id="bEqTotal">0</div>
+                  <div class="stack" style="justify-items:end;">
+                    <div class="val" id="bCap">0</div>
+                    <div class="val" id="bProfit">0</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="footerNote">
+            Strategic mechanics active: receivable collection (cash timing), interest expense on loans, and final-week outcomes depend on earlier decisions.
+          </div>
+        </div>
+
+        <div class="kicker" style="margin-top:14px;">Run log</div>
+        <div class="log" id="log"></div>
+      </section>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- State ----------
+  const state = {
+    episodeIndex: 0,
+    bankrupt: false,
+
+    // accounts:
+    cash: 0,
+    inventory: 0,
+    otherAssets: 0,
+    accountsPayable: 0,
+    loanPayable: 0,
+    ownerCapital: 0,
+    profit: 0,
+    receivable: 0,
+
+    // flags (strategy):
+    qualityRisk: false,
+    supplierAnger: false,
+    finalWeekPenalty: false,
+    speedBoost: false,       // hire helper: reduces inventory used later
+    demandBoost: false,      // marketing: boosts sales later
+    capacityStrain: false,   // no spending: reduces sales later
+    reliableGear: false,     // repair: stabilizes all-in
+    newGear: false           // replace: boosts sales later
+  };
+
+  // ---------- Helpers ----------
+  const fmt = (n) => {
+    const sign = n < 0 ? "-" : "";
+    const x = Math.abs(Math.round(n));
+    return sign + x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  const totals = () => {
+    const assets = state.cash + state.inventory + state.otherAssets + state.receivable;
+    const liabilities = state.accountsPayable + state.loanPayable;
+    const equity = state.ownerCapital + state.profit;
+    return { assets, liabilities, equity };
+  };
+
+  const log = (label, text, kind="ok") => {
+    const el = document.createElement("div");
+    el.className = "logItem";
+    const tag = document.createElement("span");
+    tag.className = "tag " + (kind === "bad" ? "bad" : "ok");
+    tag.textContent = label;
+    el.appendChild(tag);
+    const span = document.createElement("span");
+    span.textContent = text;
+    el.appendChild(span);
+    document.getElementById("log").prepend(el);
+  };
+
+  function setReveal(kind, title, lines){
+    const box = document.getElementById("revealBox");
+    box.classList.remove("ok","danger");
+    box.classList.add(kind === "bad" ? "danger" : "ok");
+    document.getElementById("revealTitle").textContent = title;
+
+    const combined = (lines || []).filter(Boolean).map(s => "• " + s).join("\n");
+    const safeHtml = combined
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\n/g, "<br>");
+
+    document.getElementById("revealText").innerHTML = safeHtml || "—";
+    document.getElementById("reveal").classList.add("show");
+  }
+
+  function hideReveal(){ document.getElementById("reveal").classList.remove("show"); }
+  function showVideoBox(show){ document.getElementById("videoBox").classList.toggle("show", !!show); }
+
+  function updateUI(){
+    const { assets, liabilities, equity } = totals();
+
+    // Top bars
+    document.getElementById("valA").textContent = fmt(assets);
+    document.getElementById("valL").textContent = fmt(liabilities);
+    document.getElementById("valE").textContent = fmt(equity);
+
+    // Equation
+    const eqBox = document.getElementById("eqBox");
+    const ok = Math.round(assets) === Math.round(liabilities + equity);
+    eqBox.classList.toggle("good", ok);
+    eqBox.classList.toggle("bad", !ok);
+    document.getElementById("eqRight").textContent = `${fmt(assets)} = ${fmt(liabilities)} + ${fmt(equity)}`;
+
+    // Bar widths
+    const maxVal = Math.max(assets, liabilities, equity, 1);
+    document.getElementById("barA").style.width = Math.max(0, (assets / maxVal) * 100) + "%";
+    document.getElementById("barL").style.width = Math.max(0, (liabilities / maxVal) * 100) + "%";
+    document.getElementById("barE").style.width = Math.max(0, (equity / maxVal) * 100) + "%";
+
+    // Breakdown totals
+    document.getElementById("bAssetsTotal").textContent = fmt(assets);
+    document.getElementById("bLiabTotal").textContent = fmt(liabilities);
+    document.getElementById("bEqTotal").textContent = fmt(equity);
+
+    // Breakdown lines
+    document.getElementById("bCash").textContent = fmt(state.cash);
+    document.getElementById("bInv").textContent = fmt(state.inventory);
+    document.getElementById("bAR").textContent = fmt(state.receivable);
+    document.getElementById("bOther").textContent = fmt(state.otherAssets);
+
+    document.getElementById("bAP").textContent = fmt(state.accountsPayable);
+    document.getElementById("bLoan").textContent = fmt(state.loanPayable);
+
+    document.getElementById("bCap").textContent = fmt(state.ownerCapital);
+    document.getElementById("bProfit").textContent = fmt(state.profit);
+  }
+
+  function bankrupt(reason){
+    state.bankrupt = true;
+    setReveal("bad", "Bankrupt (Game Over)", [reason]);
+    log("GAME OVER", reason, "bad");
+    showVideoBox(false);   // IMPORTANT: never show deep dive on game over
+    renderEpisode(true);
+  }
+
+  function cashCheck(){
+    if (state.cash < 0){
+      bankrupt("Cash went below zero. You ran out of money and the business collapses.");
+      return true;
+    }
+    return false;
+  }
+
+  // Supplier freeze (hidden trigger)
+  function supplierFreezeCheck(){
+    if (state.accountsPayable > 4000){
+      state.cash -= 1000;
+      state.accountsPayable -= 1000;
+      log("EVENT", "Supplier freeze! Forced settlement: pay 1,000 now.", "bad");
+      if (state.cash < 0){
+        bankrupt("Supplier froze your account. You couldn't pay the forced settlement. Cash went below zero.");
+        return true;
+      }
+      if (state.accountsPayable > 4000){
+        bankrupt("Supplier froze your account. Even after forced settlement, Accounts Payable is still too high. Operations stop.");
+        return true;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Receivable collection (cash timing)
+  function collectReceivableEvent(){
+    if (state.receivable <= 0) return { did:false, text:"" };
+    const collected = Math.round(state.receivable * 0.70);
+    if (collected <= 0) return { did:false, text:"" };
+    state.cash += collected;
+    state.receivable -= collected;
+    return {
+      did:true,
+      text:`Receivable collection: You collected ${fmt(collected)} in cash from customers. Cash increased and Receivable decreased (total Assets unchanged).`
+    };
+  }
+
+  // Interest expense (debt cost)
+  function interestExpenseEvent(label){
+    if (state.loanPayable <= 0) return { did:false, text:"" };
+    const interest = Math.round(state.loanPayable * 0.02);
+    if (interest <= 0) return { did:false, text:"" };
+    state.cash -= interest;
+    state.profit -= interest;
+    return {
+      did:true,
+      text:`Interest expense (${label}): Cash decreased by ${fmt(interest)} and Profit decreased by ${fmt(interest)}. Expenses reduce Equity.`
+    };
+  }
+
+  // Bank recall test (hidden trigger)
+  function bankRecallTest(whenLabel){
+    if (state.loanPayable >= 12000 && state.cash < 800){
+      state.cash -= 1500;
+      state.loanPayable -= 1500;
+      log("EVENT", `Bank recall (${whenLabel})! Forced repayment: 1,500 now.`, "bad");
+      if (state.cash < 0){
+        bankrupt(`Bank recall (${whenLabel}) triggered. You couldn't make the forced repayment. Cash went below zero.`);
+        return true;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Final-week all-in outcome score
+  function allInOutcomeIsGood(){
+    let score = 0;
+    if (state.demandBoost) score += 1;
+    if (state.speedBoost) score += 1;
+    if (state.newGear || state.reliableGear) score += 1;
+
+    if (state.supplierAnger) score -= 1;
+    if (state.finalWeekPenalty) score -= 2;
+    if (state.capacityStrain) score -= 1;
+
+    // Reliable gear provides protection unless you angered supplier or shut down
+    if (state.reliableGear && !state.supplierAnger && !state.finalWeekPenalty) return true;
+
+    return score >= 1;
+  }
+
+  // Episode 8 modifiers
+  function salesModifierBase(){
+    let mod = 0;
+    if (state.demandBoost) mod += 300;      // marketing lifts demand
+    if (state.capacityStrain) mod -= 200;   // missed demand due to no prep
+    if (state.finalWeekPenalty) mod -= 400; // shutdown hits final week
+    if (state.newGear) mod += 200;          // new gear improves throughput
+    return mod;
+  }
+
+  function reduceInventoryUsed(baseUsed){
+    const reduction = state.speedBoost ? 150 : 0; // helper reduces waste/spoilage
+    return Math.max(0, baseUsed - reduction);
+  }
+
+  // ---------- Episodes ----------
+  const episodes = [
+    {
+      title: "Episode 1 — Start the business",
+      story: "You’re launching KopiKart tomorrow. You need a cart, stock, and a plan. Choose how to start.",
+      choices: [
+        { label: "Inject owner cash: 5,000", apply: () => (state.cash+=5000, state.ownerCapital+=5000,
+          "Owner investment: Cash increased by 5,000 (Assets up). Owner Capital increased by 5,000 (Equity up).") },
+        { label: "Inject owner cash: 6,000", apply: () => (state.cash+=6000, state.ownerCapital+=6000,
+          "Owner investment: Cash increased by 6,000 (Assets up). Owner Capital increased by 6,000 (Equity up).") },
+        { label: "Inject owner cash: 7,000", apply: () => (state.cash+=7000, state.ownerCapital+=7000,
+          "Owner investment: Cash increased by 7,000 (Assets up). Owner Capital increased by 7,000 (Equity up).") },
+
+        { label: "Contribute your personal car to business: value 5,000", apply: () => (state.otherAssets+=5000, state.ownerCapital+=5000,
+          "Non-cash contribution: Other assets increased by 5,000 (Assets up). Owner Capital increased by 5,000 (Equity up). Cash unchanged.") },
+        { label: "Contribute your personal car to business: value 8,000", apply: () => (state.otherAssets+=8000, state.ownerCapital+=8000,
+          "Non-cash contribution: Other assets increased by 8,000 (Assets up). Owner Capital increased by 8,000 (Equity up). Cash unchanged.") },
+        { label: "Contribute your personal car to business: value 11,000", apply: () => (state.otherAssets+=11000, state.ownerCapital+=11000,
+          "Non-cash contribution: Other assets increased by 11,000 (Assets up). Owner Capital increased by 11,000 (Equity up). Cash unchanged.") },
+
+        { label: "Take a bank loan: 5,000", apply: () => (state.cash+=5000, state.loanPayable+=5000,
+          "Bank loan: Cash increased by 5,000 (Assets up). Loan Payable increased by 5,000 (Liabilities up).") },
+        { label: "Take a bank loan: 10,000", apply: () => (state.cash+=10000, state.loanPayable+=10000,
+          "Bank loan: Cash increased by 10,000 (Assets up). Loan Payable increased by 10,000 (Liabilities up).") },
+        { label: "Take a bank loan: 15,000", apply: () => (state.cash+=15000, state.loanPayable+=15000,
+          "Bank loan: Cash increased by 15,000 (Assets up). Loan Payable increased by 15,000 (Liabilities up).") }
+      ]
+    },
+    {
+      title: "Episode 2 — Get a cart and equipment",
+      story: "You need a cart and basic equipment to sell. Choose one offer.",
+      choices: [
+        { label: "Buy equipment for 3,000 cash", apply: () => (state.otherAssets+=3000, state.cash-=3000,
+          "Asset swap: Other assets increased by 3,000 and Cash decreased by 3,000. Total Assets stayed the same.") },
+        { label: "Buy equipment for 3,300 on credit (Accounts Payable)", apply: () => (state.otherAssets+=3300, state.accountsPayable+=3300,
+          "Buy on credit: Other assets increased by 3,300 (Assets up) and Accounts Payable increased by 3,300 (Liabilities up).") },
+        { label: "Rent equipment for 600 cash (expense)", apply: () => (state.cash-=600, state.profit-=600,
+          "Expense: Cash decreased by 600 and Profit decreased by 600. Expenses reduce Equity.") }
+      ]
+    },
+    {
+      title: "Episode 3 — Buy inventory",
+      story: "You need beans, cups, milk, sugar. Choose how to stock up.",
+      choices: [
+        { label: "Buy inventory for 2,000 cash", apply: () => (state.inventory+=2000, state.cash-=2000,
+          "Asset swap: Inventory increased by 2,000 and Cash decreased by 2,000. Total Assets stayed the same.") },
+        { label: "Buy inventory for 2,200 on credit (Accounts Payable)", apply: () => (state.inventory+=2200, state.accountsPayable+=2200,
+          "Buy on credit: Inventory increased by 2,200 (Assets up) and Accounts Payable increased by 2,200 (Liabilities up).") },
+        { label: "Buy cheaper inventory for 1,600 cash", apply: () => (state.inventory+=1600, state.cash-=1600, state.qualityRisk=true,
+          "Asset swap: Inventory increased by 1,600 and Cash decreased by 1,600. (Quality consequences may appear later.)") }
+      ]
+    },
+    {
+      title: "Episode 4 — Week 1 sales",
+      story: "You open for business. Choose your selling approach.",
+      choices: [
+        {
+          label: "Cash-only sales: collect 1,200 cash; inventory used 500",
+          apply: () => {
+            const sales = 1200, used = 500;
+            state.cash += sales;
+            state.inventory -= used;
+            state.profit += (sales - used);
+            let msg = `Revenue and cost: Cash increased by ${fmt(sales)}. Inventory decreased by ${fmt(used)} (cost of sales). Profit increased by ${fmt(sales - used)} (revenue minus cost).`;
+            if (state.qualityRisk){
+              state.cash -= 250;
+              state.profit -= 250;
+              msg += ` Quality issue: Cash decreased by 250 and Profit decreased by 250 (refunds).`;
+            }
+            return msg;
+          }
+        },
+        {
+          label: "Sell on credit: total 1,800; cash now 900; inventory used 700",
+          apply: () => {
+            const totalSales = 1800, cashNow = 900, ar = totalSales - cashNow, used = 700;
+            state.cash += cashNow;
+            state.receivable += ar;
+            state.inventory -= used;
+            state.profit += (totalSales - used);
+
+            let msg = `Credit sales: Cash increased by ${fmt(cashNow)} and Receivable increased by ${fmt(ar)} (both are Assets). Inventory decreased by ${fmt(used)} (cost of sales). Profit increased by ${fmt(totalSales - used)}.`;
+            if (state.qualityRisk){
+              state.cash -= 250;
+              state.profit -= 250;
+              msg += ` Quality issue: Cash decreased by 250 and Profit decreased by 250 (refunds).`;
+            }
+            return msg;
+          }
+        },
+        {
+          label: "Discount strategy: collect 1,400 cash; inventory used 1,000",
+          apply: () => {
+            const sales = 1400, used = 1000;
+            state.cash += sales;
+            state.inventory -= used;
+            state.profit += (sales - used);
+            let msg = `Revenue and cost: Cash increased by ${fmt(sales)}. Inventory decreased by ${fmt(used)} (cost of sales). Profit increased by ${fmt(sales - used)}.`;
+            if (state.qualityRisk){
+              state.cash -= 250;
+              state.profit -= 250;
+              msg += ` Quality issue: Cash decreased by 250 and Profit decreased by 250 (refunds).`;
+            }
+            return msg;
+          }
+        }
+      ]
+    },
+    {
+      title: "Episode 5 — Strategy week (prepare for the finale)",
+      story: "Week 2 starts. Your choices now affect the final week. Choose one.",
+      choices: [
+        {
+          label: "Hire a helper: wages expense 450 cash",
+          apply: () => {
+            state.cash -= 450;
+            state.profit -= 450;
+            state.speedBoost = true;
+            state.capacityStrain = false;
+            return "Hire helper: Cash decreased by 450 and Profit decreased by 450 (wages expense). This reduces inventory used in the final week (less waste), which increases profit later.";
+          }
+        },
+        {
+          label: "Marketing spend: 350 cash (expense)",
+          apply: () => {
+            state.cash -= 350;
+            state.profit -= 350;
+            state.demandBoost = true;
+            state.capacityStrain = false;
+            return "Marketing: Cash decreased by 350 and Profit decreased by 350 (marketing expense). This increases final-week sales.";
+          }
+        },
+        {
+          label: "Spend nothing: 0",
+          apply: () => {
+            state.capacityStrain = true;
+            return "No spending: No immediate accounting impact. But missed preparation can reduce final-week sales.";
+          }
+        }
+      ]
+    },
+    {
+      title: "Episode 6 — Supplier and bank pressure",
+      story: "Suppliers and the bank start watching you. Choose your response.",
+      choices: [
+        {
+          label: "Pay 60% of Accounts Payable now (cash)",
+          apply: () => {
+            const pay = Math.round(state.accountsPayable * 0.60);
+            state.cash -= pay;
+            state.accountsPayable -= pay;
+            return `Pay suppliers: Cash decreased by ${fmt(pay)} and Accounts Payable decreased by ${fmt(pay)}. Assets and Liabilities both decreased by the same amount.`;
+          }
+        },
+        {
+          label: "Delay payment: late penalty expense 250 cash",
+          apply: () => {
+            state.cash -= 250;
+            state.profit -= 250;
+            state.supplierAnger = true;
+            return "Delay payment: Cash decreased by 250 and Profit decreased by 250 (late penalty). This can hurt the final-week outcome.";
+          }
+        },
+        {
+          label: "Restructure: convert all Accounts Payable into bank loan + processing fee 120 cash",
+          apply: () => {
+            const ap = state.accountsPayable;
+            state.loanPayable += ap;
+            state.accountsPayable = 0;
+            state.cash -= 120;
+            state.profit -= 120;
+            return `Restructure: Loan Payable increased by ${fmt(ap)} and Accounts Payable decreased by ${fmt(ap)} (a shift within Liabilities). Processing fee: Cash decreased by 120 and Profit decreased by 120 (expense).`;
+          }
+        }
+      ],
+      after: () => {
+        const notes = [];
+
+        const rc = collectReceivableEvent();
+        if (rc.did) notes.push(rc.text);
+
+        const ie = interestExpenseEvent("end of Episode 6");
+        if (ie.did) notes.push(ie.text);
+
+        bankRecallTest("after Episode 6");
+        return notes;
+      }
+    },
+    {
+      title: "Episode 7 — Breakdown week",
+      story: "Something happens to your setup. Choose your move.",
+      choices: [
+        {
+          label: "Repair now: 650 cash (expense)",
+          apply: () => {
+            state.cash -= 650;
+            state.profit -= 650;
+            state.reliableGear = true;
+            state.newGear = false;
+            return "Repair: Cash decreased by 650 and Profit decreased by 650 (repair expense). This stabilizes operations and can protect your all-in outcome later.";
+          }
+        },
+        {
+          label: "Replace equipment on credit: 1,400 (Accounts Payable)",
+          apply: () => {
+            state.otherAssets += 1400;
+            state.accountsPayable += 1400;
+            state.newGear = true;
+            state.reliableGear = false;
+            return "Replace on credit: Other assets increased by 1,400 (Assets up) and Accounts Payable increased by 1,400 (Liabilities up). This boosts final-week sales potential but increases supplier risk.";
+          }
+        },
+        {
+          label: "Shut down this week: fixed cost 100 cash (expense)",
+          apply: () => {
+            state.cash -= 100;
+            state.profit -= 100;
+            state.finalWeekPenalty = true;
+            return "Shutdown: Cash decreased by 100 and Profit decreased by 100 (expense). This reduces final-week sales because you lose momentum.";
+          }
+        }
+      ]
+    },
+    {
+      title: "Episode 8 — Final market event",
+      story: "Final week. A big market event is happening. Choose your play.",
+      choices: [
+        {
+          label: "Safe event: base sales 1,500 cash; stall fee 100 cash; inventory used 800",
+          apply: () => {
+            let sales = 1500 + salesModifierBase();
+            sales = Math.max(0, sales);
+            const fee = 100;
+            const used = reduceInventoryUsed(800);
+
+            state.cash += sales;
+            state.cash -= fee;
+            state.inventory -= used;
+
+            const profitAdd = sales - used - fee;
+            state.profit += profitAdd;
+
+            let msg = `Safe event: Cash increased by ${fmt(sales)} from sales, then Cash decreased by ${fmt(fee)} (stall fee). Inventory decreased by ${fmt(used)} (cost of sales). Profit increased by ${fmt(profitAdd)}.`;
+            if (state.speedBoost) msg += " Helper effect: Inventory used was reduced (less waste), increasing profit.";
+            if (state.demandBoost) msg += " Marketing effect: Sales increased.";
+            if (state.capacityStrain) msg += " No-prep effect: Sales decreased.";
+            if (state.newGear) msg += " New gear effect: Sales increased.";
+            if (state.finalWeekPenalty) msg += " Shutdown effect: Sales decreased.";
+            return msg;
+          }
+        },
+        {
+          label: "All-in event: base inventory used 1,200; stall fee 200 cash (outcome depends on earlier choices)",
+          apply: () => {
+            const good = allInOutcomeIsGood();
+            let sales = good ? 2600 : 1200;
+
+            if (good && state.demandBoost) sales += 500;
+            sales += (state.capacityStrain ? -200 : 0);
+            sales += (state.finalWeekPenalty ? -400 : 0);
+            sales += (state.newGear ? 200 : 0);
+            sales = Math.max(0, sales);
+
+            const fee = 200;
+            const used = reduceInventoryUsed(1200);
+
+            state.cash += sales;
+            state.cash -= fee;
+            state.inventory -= used;
+
+            const profitAdd = sales - used - fee;
+            state.profit += profitAdd;
+
+            let msg = `All-in outcome: Cash increased by ${fmt(sales)} from sales, then Cash decreased by ${fmt(fee)} (stall fee). Inventory decreased by ${fmt(used)} (cost of sales). Profit changed by ${fmt(profitAdd)}.`;
+            msg += good ? " Your earlier decisions supported a strong outcome." : " Your earlier decisions led to a weaker outcome.";
+            if (state.speedBoost) msg += " Helper effect: Inventory used was reduced (less waste), increasing profit.";
+            if (state.demandBoost) msg += good ? " Marketing effect: Sales increased further because the crowd showed up." : " Marketing was not enough to overcome the weaknesses this time.";
+            if (state.supplierAnger) msg += " Supplier relationship issue: It reduced your ability to execute the all-in plan.";
+            if (state.capacityStrain) msg += " No-prep effect: You missed demand and lost sales.";
+            if (state.newGear) msg += " New gear effect: Faster service improved sales.";
+            if (state.reliableGear) msg += " Reliability effect: Your setup performed smoothly under pressure.";
+            if (state.finalWeekPenalty) msg += " Shutdown effect: Lost momentum reduced sales.";
+            return msg;
+          }
+        },
+        {
+          label: "Corporate order: base total sales 3,000; cash now 20%; delivery 150 cash; inventory used 1,300",
+          apply: () => {
+            let totalSales = 3000;
+            if (state.demandBoost) totalSales += 400;
+            totalSales += (state.capacityStrain ? -200 : 0);
+            totalSales += (state.finalWeekPenalty ? -400 : 0);
+            totalSales += (state.newGear ? 200 : 0);
+            totalSales = Math.max(0, totalSales);
+
+            const cashNow = Math.round(totalSales * 0.20);
+            const ar = totalSales - cashNow;
+            const delivery = 150;
+            const used = reduceInventoryUsed(1300);
+
+            state.cash += cashNow;
+            state.cash -= delivery;
+            state.receivable += ar;
+            state.inventory -= used;
+
+            const profitAdd = totalSales - used - delivery;
+            state.profit += profitAdd;
+
+            let msg = `Corporate order: Cash increased by ${fmt(cashNow)} now, Receivable increased by ${fmt(ar)} (future cash). Cash decreased by ${fmt(delivery)} (delivery expense). Inventory decreased by ${fmt(used)} (cost of sales). Profit increased by ${fmt(profitAdd)}.`;
+            msg += " This can be high profit, but cash may be tight until customers pay.";
+            if (state.speedBoost) msg += " Helper effect: Inventory used was reduced (less waste), increasing profit.";
+            if (state.demandBoost) msg += " Marketing effect: Larger corporate order.";
+            if (state.capacityStrain) msg += " No-prep effect: Smaller corporate order.";
+            if (state.newGear) msg += " New gear effect: Higher throughput improved order size.";
+            if (state.finalWeekPenalty) msg += " Shutdown effect: Reduced business momentum lowered the order size.";
+            return msg;
+          }
+        }
+      ],
+      after: () => {
+        const notes = [];
+        const ie = interestExpenseEvent("end of Episode 8");
+        if (ie.did) notes.push(ie.text);
+
+        bankRecallTest("after Episode 8");
+        return notes;
+      }
+    }
+  ];
+
+  // ---------- Rendering ----------
+  const epKicker = document.getElementById("epKicker");
+  const epTitle = document.getElementById("epTitle");
+  const epStory = document.getElementById("epStory");
+  const choicesEl = document.getElementById("choices");
+
+  function renderEpisode(disableAll=false){
+    const isDone = state.episodeIndex >= episodes.length;
+
+    epKicker.textContent =
+      state.bankrupt ? "Status"
+      : isDone ? "Season result"
+      : `Episode ${state.episodeIndex + 1} of ${episodes.length}`;
+
+    epTitle.textContent =
+      state.bankrupt ? "Run ended"
+      : isDone ? "Season complete"
+      : episodes[state.episodeIndex].title;
+
+    epStory.textContent =
+      state.bankrupt
+        ? "Your run has ended due to bankruptcy. Reset to try again."
+        : isDone
+          ? `You finished the season. Profit = ${fmt(state.profit)}. Cash = ${fmt(state.cash)}.`
+          : episodes[state.episodeIndex].story;
+
+    choicesEl.innerHTML = "";
+
+    if (isDone || state.bankrupt){
+      // IMPORTANT: show deep dive ONLY after season complete (NOT on game over)
+      showVideoBox(isDone);
+
+      const t = totals();
+      const doneNote = document.createElement("div");
+      doneNote.className = "logItem";
+
+      if (isDone){
+        doneNote.innerHTML = `<span class="tag ok">RESULT</span>
+          Final totals — Profit: <b>${fmt(state.profit)}</b>, Cash: <b>${fmt(state.cash)}</b>,
+          Assets: <b>${fmt(t.assets)}</b>, Liabilities: <b>${fmt(t.liabilities)}</b>, Equity: <b>${fmt(t.equity)}</b>.`;
+      } else {
+        doneNote.innerHTML = `<span class="tag bad">GAME OVER</span>
+          You went bankrupt. Reset and try again.`;
+      }
+
+      choicesEl.appendChild(doneNote);
+      document.getElementById("btnNext").disabled = true;
+      return;
+    }
+
+    showVideoBox(false);
+    hideReveal();
+    document.getElementById("btnNext").disabled = true;
+
+    const ep = episodes[state.episodeIndex];
+    ep.choices.forEach((c, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.disabled = disableAll || state.bankrupt;
+      btn.innerHTML = `<b>Option ${String.fromCharCode(65 + idx)}</b><small>${c.label}</small>`;
+      btn.addEventListener("click", () => choose(idx));
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function choose(choiceIndex){
+    if (state.bankrupt) return;
+
+    const ep = episodes[state.episodeIndex];
+    const choice = ep.choices[choiceIndex];
+
+    const lines = [];
+    // 1) Apply choice
+    const explanation = choice.apply();
+    lines.push(explanation);
+
+    // 2) Supplier freeze trigger
+    const supplierEvent = supplierFreezeCheck();
+    if (supplierEvent) lines.push("Supplier event: Accounts Payable exceeded the limit, so a forced settlement happened.");
+    if (state.bankrupt) { updateUI(); return; }
+    if (cashCheck()) { updateUI(); return; }
+
+    // 3) After-episode mechanics
+    if (ep.after){
+      const extra = ep.after() || [];
+      for (const n of extra) if (n) lines.push(n);
+      if (state.bankrupt) { updateUI(); return; }
+      if (cashCheck()) { updateUI(); return; }
+    }
+
+    updateUI();
+    setReveal("ok", "Impact revealed", lines);
+    log("CHOICE", `${ep.title} — ${choice.label}`, "ok");
+
+    document.getElementById("btnNext").disabled = false;
+    [...choicesEl.querySelectorAll("button.choice")].forEach(b => b.disabled = true);
+  }
+
+  // ---------- Buttons ----------
+  document.getElementById("btnNext").addEventListener("click", () => {
+    if (state.bankrupt) return;
+    state.episodeIndex += 1;
+    renderEpisode();
+  });
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    Object.assign(state, {
+      episodeIndex: 0,
+      bankrupt: false,
+
+      cash: 0,
+      inventory: 0,
+      otherAssets: 0,
+      accountsPayable: 0,
+      loanPayable: 0,
+      ownerCapital: 0,
+      profit: 0,
+      receivable: 0,
+
+      qualityRisk: false,
+      supplierAnger: false,
+      finalWeekPenalty: false,
+      speedBoost: false,
+      demandBoost: false,
+      capacityStrain: false,
+      reliableGear: false,
+      newGear: false
+    });
+
+    document.getElementById("log").innerHTML = "";
+    hideReveal();
+    showVideoBox(false);
+    updateUI();
+    renderEpisode();
+    log("RESET", "New run started.", "ok");
+  });
+
+  document.getElementById("btnSkip").addEventListener("click", () => {
+    if (state.bankrupt) return;
+    state.episodeIndex = Math.min(state.episodeIndex + 1, episodes.length);
+    renderEpisode();
+  });
+
+  document.getElementById("btnShowBreakdown").addEventListener("click", () => {
+    const bd = document.getElementById("breakdown");
+    bd.style.display = (bd.style.display === "none") ? "block" : "none";
+  });
+
+  // ---------- Init ----------
+  updateUI();
+  renderEpisode();
+  log("START", "Pick an option to begin. Impacts are hidden until you click.", "ok");
+})();
+</script>
+</body>
+</html>
