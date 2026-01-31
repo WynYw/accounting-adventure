@@ -19,19 +19,21 @@
     .grid { display:grid; gap:12px; grid-template-columns: 1fr; }
     @media (min-width: 920px) { .grid { grid-template-columns: 1.1fr .9fr; } }
     .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
-    button {
+    button, a.btn {
+      display:inline-block;
       background:#1c2b55; color:#e9eefc; border:1px solid rgba(255,255,255,.12);
-      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:600;
+      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700;
       transition: transform .05s ease, background .15s ease;
+      text-decoration:none;
     }
-    button:hover { background:#22356b; }
-    button:active { transform: translateY(1px); }
+    button:hover, a.btn:hover { background:#22356b; }
+    button:active, a.btn:active { transform: translateY(1px); }
     button:disabled { opacity:.55; cursor:not-allowed; }
     .primary { background:#2b4aa8; border-color: rgba(255,255,255,.16); }
     .primary:hover { background:#3557c2; }
     .muted { opacity:.75; }
     .small { font-size: 13px; opacity:.85; }
-    .pillrow { display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 0; }
+    .pillrow { display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 0; align-items:center; }
     .pill {
       background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10);
       padding:6px 10px; border-radius:999px; font-size: 13px;
@@ -61,67 +63,171 @@
     summary { cursor:pointer; opacity:.9; }
     summary:hover { opacity: 1; }
 
-    .footer { display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; }
+    .footer { display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px; align-items:center; }
     .linkbtn { background:#1c2b55; }
 
     .rightTitle { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
     .statusLine { margin-top: 8px; }
     .socHeaderLine { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top: 4px; }
+
+    .headerRow { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+    .headerActions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .miniBtn { padding:7px 10px; border-radius:999px; font-weight:700; font-size:13px; }
+    .miniBtn.ghost { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.10); }
+    .miniBtn.ghost:hover { background: rgba(255,255,255,.12); }
+
+    .titleRow { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+    .titleActions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      background: rgba(18,27,50,.95); border:1px solid rgba(255,255,255,.12);
+      padding:10px 12px; border-radius:12px; box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      font-size: 13px; opacity: 0; pointer-events:none; transition: opacity .2s ease;
+      max-width: 92vw;
+    }
+    .toast.show { opacity: 1; }
+    .scoreBox {
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px; padding:12px;
+    }
+    .scoreGrid { display:grid; gap:10px; grid-template-columns: 1fr; }
+    @media (min-width: 560px) { .scoreGrid { grid-template-columns: 1fr 1fr; } }
+    .kbd {
+      display:inline-block; padding:2px 7px; border-radius:8px;
+      border:1px solid rgba(255,255,255,.15); background:rgba(255,255,255,.06);
+      font-size: 12px; opacity:.95;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
+    <!-- HEADER -->
     <div class="card">
-      <h1>Manufacturing Adventure — Season 1 (Statement of Cost Focus)</h1>
-      <p class="muted">
-        Choose A / B / C. You only see the cost impact after selecting.
-        Objective: <b>minimize total Cost of Production (COP)</b> while meeting every <b>output target</b>.
-        Cutting cost “too much” can trigger <b>scrap</b> or <b>complaints</b> → <b>burst</b>.
-      </p>
-      <div class="pillrow">
-        <div class="pill">Replayable</div>
+      <div class="headerRow">
+        <div>
+          <h1 style="margin-bottom:6px;">Manufacturing Adventure — Season 1 (Statement of Cost Focus)</h1>
+          <p class="muted" style="margin-top:0;">
+            Choose A / B / C. You only see the cost impact after selecting.
+            Objective: <b>minimize total Cost of Production (Total COP)</b> while meeting every <b>output target</b>.
+            Cutting cost “too much” can trigger <b>scrap</b> or <b>complaints</b> → <b>burst</b>.
+          </p>
+          <div class="pillrow">
+            <div class="pill">Replayable</div>
+          </div>
+        </div>
+
+        <!-- Top header actions next to Replayable -->
+        <div class="headerActions">
+          <a class="btn miniBtn ghost" href="https://accountingaventure.wordpress.com/manufacturing-adventure-season-1/" target="_blank" rel="noopener">Guide</a>
+          <a class="btn miniBtn ghost" href="https://accountingaventure.wordpress.com/glossary-list-in-the-episodes-season-1/" target="_blank" rel="noopener">Glossary</a>
+          <a class="btn miniBtn ghost" href="https://accountingaventure.wordpress.com/manufacturing-adventure-season-1/" target="_blank" rel="noopener">Hint</a>
+        </div>
       </div>
     </div>
 
     <div class="grid" style="margin-top:14px;">
       <!-- LEFT -->
       <div class="card" id="mainCard">
-        <h2 id="epTitle">Episode</h2>
-        <p id="story"></p>
 
-        <!-- Left pills: Episode + Reason only -->
-        <div class="pillrow mono" id="epMetaPills"></div>
+        <!-- PRE-EPISODE SCREEN -->
+        <div id="preEpisode">
+          <h2>Instruction Manual & Strategy Guide (Statement of Cost Focus)</h2>
+          <p class="muted">
+            <b>Backstory:</b> You’re the Production &amp; Cost Control Lead of a newly launched manufacturing business.
+            Each episode is a production period. Management wants you to hit the output target while keeping manufacturing costs under control.
+            Cutting costs too aggressively can backfire: scrap rises, complaints increase, and you can burst (game over).
+          </p>
 
-        <div class="btns" id="choiceButtons"></div>
-
-        <div class="reveal hidden" id="revealBox">
-          <h3 style="margin-bottom:6px;">Post-choice reveal</h3>
-          <div id="revealText"></div>
-
-          <div class="hr"></div>
+          <div class="scoreBox">
+            <h3 style="margin:0 0 6px;">How you win</h3>
+            <div class="small muted">
+              • Your score is <b>Total COP</b> across Episodes 2–8 (lower is better).<br/>
+              • You must meet every episode’s <b>output target</b> (good units).<br/>
+              • You burst immediately if <b>Scrap ≥ 3%</b> or <b>Quality risk ≥ 3</b>.<br/>
+              • You also burst if <b>Needed production units &gt; Capacity</b> (target becomes impossible).<br/>
+              • After each choice, the right panel shows a <b>Statement of Cost (SOC)</b> and you can click lines to see workings.
+            </div>
+          </div>
 
           <div class="footer">
-            <button class="primary" id="nextBtn">Next Episode</button>
-            <button class="linkbtn" id="restartBtn">Restart Season</button>
+            <button class="primary" id="startSeasonBtn">Start Season</button>
+            <span class="small muted">Please read the <span class="kbd">Guide</span> / <span class="kbd">Glossary</span> if you’re new.</span>
           </div>
         </div>
 
-        <div class="reveal hidden" id="gameOverBox">
-          <h3 class="danger">Game Over — Burst</h3>
-          <div id="gameOverText"></div>
-          <div class="footer">
-            <button class="primary" id="retryBtn">Retry from Episode 1</button>
+        <!-- EPISODE SCREEN -->
+        <div id="episodeScreen" class="hidden">
+          <div class="titleRow">
+            <h2 id="epTitle" style="margin:0;">Episode</h2>
+            <div class="titleActions">
+              <a class="btn miniBtn ghost" id="epGuideBtn" href="#" target="_blank" rel="noopener">Read Episode Guide</a>
+            </div>
           </div>
-          <p class="small muted">“Video deep dive” only appears after Season Complete (not on Game Over).</p>
-        </div>
 
-        <div class="reveal hidden" id="seasonCompleteBox">
-          <h3 class="ok">Season Complete ✅</h3>
-          <div id="seasonSummary"></div>
-          <div class="footer">
-            <button class="primary" id="playAgainBtn">Play Again</button>
-            <button class="linkbtn" id="videoBtn">Video deep dive (placeholder)</button>
+          <p id="story"></p>
+
+          <!-- Left pills: Episode + Reason only -->
+          <div class="pillrow mono" id="epMetaPills"></div>
+
+          <div class="btns" id="choiceButtons"></div>
+
+          <div class="reveal hidden" id="revealBox">
+            <h3 style="margin-bottom:6px;">Post-choice reveal</h3>
+            <div id="revealText"></div>
+
+            <div class="hr"></div>
+
+            <div class="footer">
+              <button class="primary" id="nextBtn">Next Episode</button>
+              <button class="linkbtn" id="restartBtn">Restart Season</button>
+            </div>
+          </div>
+
+          <div class="reveal hidden" id="gameOverBox">
+            <h3 class="danger">Game Over — Burst</h3>
+            <div id="gameOverText"></div>
+            <div class="footer">
+              <button class="primary" id="retryBtn">Retry from Start</button>
+            </div>
+            <p class="small muted">“Video deep dive” only appears after Season Complete (not on Game Over).</p>
+          </div>
+
+          <div class="reveal hidden" id="seasonCompleteBox">
+            <h3 class="ok">Season Complete ✅</h3>
+            <div id="seasonSummary"></div>
+
+            <div class="hr"></div>
+
+            <div class="scoreBox">
+              <h3 style="margin:0 0 6px;">Your score vs best score</h3>
+              <div class="scoreGrid mono">
+                <div>
+                  <div class="small muted">Your Total COP</div>
+                  <div style="font-size:18px; font-weight:800;" id="yourCop"></div>
+                </div>
+                <div>
+                  <div class="small muted">Best Total COP</div>
+                  <div style="font-size:18px; font-weight:800;" id="bestCop"></div>
+                </div>
+                <div>
+                  <div class="small muted">Deviation</div>
+                  <div style="font-size:18px; font-weight:800;" id="deviation"></div>
+                </div>
+                <div>
+                  <div class="small muted">End status</div>
+                  <div class="small" id="endStatus"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer">
+              <button class="primary" id="playAgainBtn">Play Again</button>
+              <button class="linkbtn" id="shareBtn">Share Result</button>
+              <button class="linkbtn" id="videoBtn">Video deep dive (placeholder)</button>
+            </div>
           </div>
         </div>
       </div>
@@ -133,7 +239,6 @@
           <div class="small muted mono">Season: 1</div>
         </div>
 
-        <!-- Total COP shown ONLY here -->
         <div class="pillrow mono">
           <div class="pill">Total COP: <span id="totalCop"></span></div>
           <div class="pill">Quality risk: <span id="qRisk"></span></div>
@@ -159,19 +264,49 @@
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
 <script>
 (() => {
+  // ---------- Constants ----------
+  const BEST_COP = 183538;
+
+  const GAME_BASE_URL = "https://accounting-adventure.pages.dev/PMseason1";
+  const UTM = "utm_source=game_share&utm_medium=share_button&utm_campaign=PMseason1";
+  const SHARE_URL = `${GAME_BASE_URL}?${UTM}`;
+
+  const GUIDE_URL = "https://accountingaventure.wordpress.com/manufacturing-adventure-season-1/";
+  const GLOSSARY_URL = "https://accountingaventure.wordpress.com/glossary-list-in-the-episodes-season-1/";
+
+  const EP_GUIDES = {
+    1: "https://accountingaventure.wordpress.com/episode-1-set-up-your-factory-fixed-costs-vs-capacity/",
+    2: "https://accountingaventure.wordpress.com/episode-2-materials-sourcing-unit-cost-vs-hidden-waste/",
+    3: "https://accountingaventure.wordpress.com/episode-3-ramp-up-decision-incremental-cost-vs-future-rework/",
+    4: "https://accountingaventure.wordpress.com/episode-4-quality-control-vs-cost-cutting-visible-cost-vs-hidden-cost/",
+    5: "https://accountingaventure.wordpress.com/episode-5-maintenance-the-sunk-cost-trap-relevant-vs-irrelevant/",
+    6: "https://accountingaventure.wordpress.com/episode-6-locked-orders-capacity-scrap-can-break-you/",
+    7: "https://accountingaventure.wordpress.com/episode-7-complaints-response-spend-smart-not-big/",
+    8: "https://accountingaventure.wordpress.com/episode-8-finale-finish-strong-without-risk-spikes/"
+  };
+
   // ---------- Utilities ----------
   const fmt = (n) => (Math.round(n * 100) / 100).toLocaleString(undefined, {maximumFractionDigits: 2});
   const ceil = (n) => Math.ceil(n);
   const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
   const $ = (id) => document.getElementById(id);
 
+  function toast(msg) {
+    const t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 1600);
+  }
+
   // ---------- Season Settings ----------
   const targets = [0, 0, 220, 260, 280, 300, 320, 320, 340]; // index by episode
   const reasons = [
     "",
-    "Setup week (no production).",
+    "Start here.",
     "Pilot order.",
     "Forecast raised after pilot success.",
     "New customer trial order.",
@@ -384,7 +519,6 @@
   // ---------- Apply Choice Effects ----------
   function applyChoiceEffects(ep, optKey, notes) {
     if (ep === 1) {
-      // Treat as setup choice (no cash model). We keep narrative "deposit" but do not track budget.
       if (optKey === "A") {
         state.fixedFOH = 9000; state.baseCap = 380;
         notes.push("Setup chosen: Fixed FOH set to 9,000/episode. Capacity set to 380.");
@@ -562,16 +696,36 @@
   }
 
   // ---------- UI Rendering ----------
+  function showPreEpisode() {
+    $("preEpisode").classList.remove("hidden");
+    $("episodeScreen").classList.add("hidden");
+    updateRightPanel();
+  }
+
+  function showEpisodeScreen() {
+    $("preEpisode").classList.add("hidden");
+    $("episodeScreen").classList.remove("hidden");
+    renderEpisode();
+  }
+
   function renderEpisode() {
     const ep = state.ep;
+
+    // Episode title + story
     $("epTitle").textContent = episodes[ep].title;
     $("story").textContent = episodes[ep].story;
 
+    // Episode guide link
+    const guide = EP_GUIDES[ep] || GUIDE_URL;
+    $("epGuideBtn").href = guide;
+
+    // Left pills: Episode + Reason only
     const pills = [];
     pills.push(`<div class="pill">Episode ${ep} of 8</div>`);
     pills.push(`<div class="pill">${escapeHtml(reasons[ep])}</div>`);
     $("epMetaPills").innerHTML = pills.join("");
 
+    // choices
     const btns = $("choiceButtons");
     btns.innerHTML = "";
     episodes[ep].options.forEach(opt => {
@@ -605,11 +759,12 @@
     statusBits.push(`Needed production units: ${fmt(need.pu)}${need.extra > 0 ? ` (extra ${fmt(need.extra)} due to waste)` : ""}`);
     statusBits.push(`Capacity: ${fmt(cap)}`);
 
-    if (target > 0) statusBits.push(need.pu <= cap ? "Status: OK (based on current scrap)" : "Status: AT RISK (current scrap may break output)");
+    if (ep >= 2) statusBits.push(need.pu <= cap ? "Status: OK (based on current scrap)" : "Status: AT RISK (current scrap may break output)");
 
     statusBits.push(`Burst thresholds: scrap ≥ 3% OR quality risk ≥ 3.`);
 
     $("statusLine").innerHTML = statusBits.map(x => `• ${escapeHtml(x)}`).join("<br/>");
+
     $("socLabel").textContent = state.lastRecord ? `Last episode result (Ep ${state.lastRecord.ep})` : "No result yet";
 
     const lines = [];
@@ -645,14 +800,17 @@
     updateRightPanel();
 
     $("revealBox").classList.remove("hidden");
-    $("nextBtn").onclick = () => { if (state.ep < 8) { state.ep += 1; renderEpisode(); } };
-    $("restartBtn").onclick = () => { resetState(); renderEpisode(); };
+
+    $("nextBtn").onclick = () => {
+      if (state.ep < 8) { state.ep += 1; renderEpisode(); }
+    };
+    $("restartBtn").onclick = () => { resetState(); showPreEpisode(); };
   }
 
-  // ---------- SOC Table ----------
+  // ---------- SOC Table (Hybrid workings) ----------
   function renderSocTable(rec) {
     const t = $("socTable");
-    if (!rec) {
+    if (!rec || rec.ep === 1) {
       t.innerHTML = `
         <thead><tr><th>Particulars</th><th>Amount</th></tr></thead>
         <tbody>
@@ -751,7 +909,7 @@
     [...t.querySelectorAll("tr.clickable")].forEach(tr => {
       tr.addEventListener("click", () => {
         const id = tr.getAttribute("data-work");
-        const workRow = document.getElementById(id);
+        const workRow = $(id);
         const caret = tr.querySelector(".caret");
         const open = !workRow.classList.contains("hidden");
         workRow.classList.toggle("hidden");
@@ -772,13 +930,20 @@
       </p>
     `;
 
-    $("retryBtn").onclick = () => { resetState(); renderEpisode(); };
+    $("retryBtn").onclick = () => { resetState(); showPreEpisode(); };
     updateRightPanel();
   }
 
   function endSeasonComplete() {
     $("revealBox").classList.add("hidden");
     $("seasonCompleteBox").classList.remove("hidden");
+
+    const your = state.totalCOP;
+    const best = BEST_COP;
+    const dev = ((your - best) / best) * 100;
+
+    const targetsMet = "Yes (all episodes)";
+    const statusText = `Targets met: ${targetsMet}<br/>Scrap: ${fmt(state.scrapRate*100)}%<br/>Quality risk: ${state.qualityRisk}`;
 
     $("seasonSummary").innerHTML = `
       <p class="mono">
@@ -789,10 +954,53 @@
       <p class="muted small">Video deep dive appears only here (not on Game Over).</p>
     `;
 
+    $("yourCop").textContent = fmt(your);
+    $("bestCop").textContent = fmt(best);
+    $("deviation").textContent = `${dev >= 0 ? "+" : ""}${fmt(dev)}%`;
+    $("endStatus").innerHTML = statusText;
+
     $("videoBtn").onclick = () => alert("Video deep dive (placeholder). Add your embed/link here later.");
-    $("playAgainBtn").onclick = () => { resetState(); renderEpisode(); };
+    $("playAgainBtn").onclick = () => { resetState(); showPreEpisode(); };
+
+    $("shareBtn").onclick = () => shareResult(your, dev);
 
     updateRightPanel();
+  }
+
+  // ---------- Share (Web Share API + clipboard fallback) ----------
+  function shareText(your, dev) {
+    return `I finished Manufacturing Adventure (Season 1)!\n` +
+      `Total COP: ${fmt(your)} | Scrap: ${fmt(state.scrapRate*100)}% | Quality risk: ${state.qualityRisk}\n` +
+      `Best COP is ${fmt(BEST_COP)} (I’m ${dev >= 0 ? "+" : ""}${fmt(dev)}%). Can you beat me?`;
+  }
+
+  async function shareResult(your, dev) {
+    const text = shareText(your, dev);
+
+    // Web Share API: send URL separately (cleaner share)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Manufacturing Adventure — Season 1",
+          text: text,
+          url: SHARE_URL
+        });
+        toast("Shared!");
+        return;
+      } catch (e) {
+        // user cancel or unsupported; fall back
+      }
+    }
+
+    // Clipboard fallback includes the URL in text (as requested)
+    const clip = `${text}\n${SHARE_URL}`;
+    try {
+      await navigator.clipboard.writeText(clip);
+      toast("Copied share text!");
+    } catch (e) {
+      // final fallback: prompt
+      window.prompt("Copy your result:", clip);
+    }
   }
 
   // ---------- Helpers ----------
@@ -801,9 +1009,14 @@
       .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
   }
 
-  // ---------- Boot ----------
+  // ---------- Wiring / Boot ----------
+  $("startSeasonBtn").onclick = () => showEpisodeScreen();
+
+  // Ensure top buttons correct (already in HTML, but keep constants handy if you later refactor)
+  // (No runtime changes needed.)
+
   resetState();
-  renderEpisode();
+  showPreEpisode();
 })();
 </script>
 </body>
