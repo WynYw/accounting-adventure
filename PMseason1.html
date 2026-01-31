@@ -612,4 +612,395 @@
     }
 
     if (ep === 7) {
-      if
+      if (optKey === "A") {
+        state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+        state.scrapRate = Math.max(0, state.scrapRate - 0.01);
+        notes.push("Containment: reduces complaints and waste immediately.");
+      } else if (optKey === "B") {
+        notes.push("Continue as-is: no immediate cost. Risk remains.");
+      } else {
+        if (state.choseCheapSupplier) {
+          state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+          state.scrapRate = Math.max(0, state.scrapRate - 0.005);
+          notes.push("Supplier audit: useful because supplier quality was a known risk earlier.");
+        } else {
+          notes.push("Supplier audit: may have limited benefit if supplier quality was not the root cause.");
+        }
+      }
+      state.scrapRate = clamp(state.scrapRate, 0, 0.30);
+      return;
+    }
+
+    if (ep === 8) {
+      if (optKey === "A") {
+        if (state.qualityRisk > 0) state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+        notes.push("Final quality push: reduces complaint risk, but costs more this episode.");
+      } else if (optKey === "B") {
+        state.qualityRisk += 1;
+        state.scrapRate += 0.01;
+        state.complaintFlag = true;
+        notes.push("Numbers-first: cost looks lower, but complaints and waste risk increase.");
+      } else {
+        if (state.qualityRisk > 0) state.qualityRisk = Math.max(0, state.qualityRisk - 1);
+        notes.push("Rework sprint: stabilizes quality, but labour cost rises this episode.");
+      }
+      state.scrapRate = clamp(state.scrapRate, 0, 0.30);
+      return;
+    }
+  }
+
+  // ---------- Burst Rules (Immediate after choice) ----------
+  function immediateBurstCheck() {
+    if (state.scrapRate >= 0.03) {
+      return { burst: true, reason: `Waste out of control: scrap reached ${fmt(state.scrapRate * 100)}% (threshold ≥ 3%).` };
+    }
+    if (state.qualityRisk >= 3) {
+      return { burst: true, reason: `Customer complaints exploded: quality risk = ${state.qualityRisk} (threshold ≥ 3).` };
+    }
+    return { burst: false, reason: "" };
+  }
+  function outputBurstCheck(rec) {
+    if (!rec.achievedTarget) {
+      return { burst: true, reason: `Failed output target: needed production ${rec.pu} units exceeds capacity ${rec.cap}.` };
+    }
+    return { burst: false, reason: "" };
+  }
+
+  // ---------- Main Step ----------
+  function chooseOption(ep, optKey) {
+    [...$("choiceButtons").querySelectorAll("button")].forEach(b => b.disabled = true);
+
+    $("revealBox").classList.add("hidden");
+    $("gameOverBox").classList.add("hidden");
+    $("seasonCompleteBox").classList.add("hidden");
+
+    const notes = [];
+    applyChoiceEffects(ep, optKey, notes);
+
+    const imm = immediateBurstCheck();
+
+    const rec = computeSOC(ep, optKey);
+    state.lastRecord = rec;
+
+    if (ep >= 2) state.totalCOP += rec.COP;
+
+    updateRightPanel();
+
+    if (imm.burst) return endGameOver(imm.reason);
+
+    const out = outputBurstCheck(rec);
+    if (out.burst) return endGameOver(out.reason);
+
+    if (ep === 8) return endSeasonComplete();
+
+    showReveal(notes, rec);
+  }
+
+  // ---------- UI Rendering ----------
+  function showPreEpisode() {
+    $("preEpisode").classList.remove("hidden");
+    $("episodeScreen").classList.add("hidden");
+    updateRightPanel();
+  }
+
+  function showEpisodeScreen() {
+    $("preEpisode").classList.add("hidden");
+    $("episodeScreen").classList.remove("hidden");
+    renderEpisode();
+  }
+
+  function renderEpisode() {
+    const ep = state.ep;
+
+    // Episode title + story
+    $("epTitle").textContent = episodes[ep].title;
+    $("story").textContent = episodes[ep].story;
+
+    // Episode guide link
+    $("epGuideBtn").href = EP_GUIDES[ep] || EP_GUIDES[1];
+
+    // Left pills: Episode + Reason only
+    const pills = [];
+    pills.push(`<div class="pill">Episode ${ep} of 8</div>`);
+    pills.push(`<div class="pill">${escapeHtml(reasons[ep])}</div>`);
+    $("epMetaPills").innerHTML = pills.join("");
+
+    // choices
+    const btns = $("choiceButtons");
+    btns.innerHTML = "";
+    episodes[ep].options.forEach(opt => {
+      const b = document.createElement("button");
+      b.textContent = `Option ${opt.key}: ${opt.text}`;
+      b.onclick = () => chooseOption(ep, opt.key);
+      btns.appendChild(b);
+    });
+
+    $("revealBox").classList.add("hidden");
+    $("gameOverBox").classList.add("hidden");
+    $("seasonCompleteBox").classList.add("hidden");
+
+    // Persist SOC
+    renderSocTable(state.lastRecord);
+    updateRightPanel();
+  }
+
+  function updateRightPanel() {
+    $("totalCop").textContent = fmt(state.totalCOP);
+    $("qRisk").textContent = `${state.qualityRisk}${state.complaintFlag ? " (watch complaints)" : ""}`;
+    $("scrap").textContent = `${fmt(state.scrapRate * 100)}%`;
+
+    const ep = state.ep;
+    const target = targets[ep];
+    const cap = effectiveCapacity();
+    const need = neededProduction(target, state.scrapRate);
+
+    const statusBits = [];
+    statusBits.push(`Target: ${fmt(target)} good units`);
+    statusBits.push(`Needed production units: ${fmt(need.pu)}${need.extra > 0 ? ` (extra ${fmt(need.extra)} due to waste)` : ""}`);
+    statusBits.push(`Capacity: ${fmt(cap)}`);
+    if (ep >= 2) statusBits.push(need.pu <= cap ? "Status: OK (based on current scrap)" : "Status: AT RISK (current scrap may break output)");
+    statusBits.push(`Burst thresholds: scrap ≥ 3% OR quality risk ≥ 3.`);
+
+    $("statusLine").innerHTML = statusBits.map(x => `• ${escapeHtml(x)}`).join("<br/>");
+
+    $("socLabel").textContent = state.lastRecord ? `Last episode result (Ep ${state.lastRecord.ep})` : "No result yet";
+
+    const lines = [];
+    lines.push(`DM/unit: ${fmt(state.dmUnit)}${state.dmAdjActive ? " (workshop improves Ep6–8)" : ""}`);
+    lines.push(`DL/unit: ${fmt(state.dlUnit)}${state.dlAdjActive ? " (line balancing improves Ep7–8)" : ""}`);
+    lines.push(`DE/unit: ${fmt(state.deUnit)}`);
+    lines.push(`Var FOH/unit: ${fmt(state.vohUnit)}${state.vohAdjActive ? " (training improves Ep5–8)" : ""}`);
+    lines.push(`Fixed FOH/episode: ${fmt(state.fixedFOH)}`);
+    lines.push(`Capacity: ${fmt(state.baseCap)}`);
+    $("costModelBox").innerHTML = lines.map(x => escapeHtml(x)).join("<br/>");
+  }
+
+  function showReveal(notes, rec) {
+    const lines = [];
+    notes.forEach(n => lines.push(`• ${n}`));
+
+    if (rec.ep >= 2) {
+      if (rec.extra > 0) {
+        lines.push(`• Waste effect: to deliver ${rec.target} good units with ${fmt(rec.scrapRate*100)}% scrap, you produced ${rec.extra} extra units (total ${rec.pu}).`);
+      } else {
+        lines.push(`• Waste effect: scrap is ${fmt(rec.scrapRate*100)}%, so you produced exactly ${rec.pu} units to meet the target.`);
+      }
+      lines.push(`• Output check: ✅ target met.`);
+      lines.push(`• This episode COP = ${fmt(rec.COP)}. Total COP so far = ${fmt(state.totalCOP)}.`);
+      lines.push(`• Quality risk now = ${state.qualityRisk}. Scrap now = ${fmt(state.scrapRate*100)}%.`);
+    } else {
+      lines.push("• Setup week: no production yet.");
+    }
+
+    $("revealText").innerHTML = lines.map(x => `<div>${escapeHtml(x)}</div>`).join("");
+
+    renderSocTable(rec);
+    updateRightPanel();
+
+    $("revealBox").classList.remove("hidden");
+
+    $("nextBtn").onclick = () => {
+      if (state.ep < 8) { state.ep += 1; renderEpisode(); }
+    };
+    $("restartBtn").onclick = () => { resetState(); showPreEpisode(); };
+  }
+
+  // ---------- SOC Table (Hybrid workings) ----------
+  function renderSocTable(rec) {
+    const t = $("socTable");
+    if (!rec || rec.ep === 1) {
+      t.innerHTML = `
+        <thead><tr><th>Particulars</th><th>Amount</th></tr></thead>
+        <tbody>
+          <tr><td class="muted">No episode result yet</td><td class="muted">—</td></tr>
+        </tbody>
+      `;
+      return;
+    }
+
+    const commonTop = `
+      <div>Target: ${fmt(rec.target)} good units</div>
+      <div>Scrap: ${fmt(rec.scrapRate*100)}% → extra produced: ${fmt(rec.extra)} units</div>
+      <div>Total produced: ${fmt(rec.pu)} units</div>
+    `;
+
+    const advPU = `
+      <details>
+        <summary>Advanced details</summary>
+        <div class="muted" style="margin-top:6px;">
+          Game calculation (not a syllabus formula): needed production is computed from target and scrap rate.
+        </div>
+      </details>
+    `;
+
+    const rows = [];
+    function addRow(label, amount, workHtml) {
+      const id = `work_${label.replace(/\W+/g,'_')}_${rec.ep}`;
+      rows.push(`
+        <tr class="clickable" data-work="${id}">
+          <td><span class="caret">▶</span>${escapeHtml(label)}</td>
+          <td>${fmt(amount)}</td>
+        </tr>
+        <tr class="workrow hidden" id="${id}">
+          <td colspan="2"><div class="workbox small mono">${workHtml}</div></td>
+        </tr>
+      `);
+    }
+
+    addRow("Direct Materials", rec.DM, `
+      ${commonTop}
+      <div>DM/unit: ${fmt(rec.dmU)}</div>
+      <div>DM cost = ${fmt(rec.pu)} × ${fmt(rec.dmU)} = ${fmt(rec.DM)}</div>
+      ${advPU}
+    `);
+
+    addRow("Direct Labour", rec.DL, `
+      ${commonTop}
+      <div>DL/unit: ${fmt(rec.dlU)}</div>
+      <div>DL cost = ${fmt(rec.pu)} × ${fmt(rec.dlU)} = ${fmt(rec.DL)}</div>
+      ${advPU}
+    `);
+
+    addRow("Direct Expenses", rec.DE, `
+      ${commonTop}
+      <div>DE/unit: ${fmt(rec.deU)}</div>
+      <div>DE cost = ${fmt(rec.pu)} × ${fmt(rec.deU)} = ${fmt(rec.DE)}</div>
+      ${advPU}
+    `);
+
+    addRow("Prime Cost", rec.prime, `
+      <div>Prime Cost = DM + DL + DE</div>
+      <div>= ${fmt(rec.DM)} + ${fmt(rec.DL)} + ${fmt(rec.DE)} = ${fmt(rec.prime)}</div>
+    `);
+
+    addRow("Factory Overheads", rec.FOH, `
+      ${commonTop}
+      <div>Fixed FOH (this episode): ${fmt(rec.fixedFOH)}</div>
+      <div>Variable FOH/unit: ${fmt(rec.vohU)}</div>
+      <div>Variable FOH = ${fmt(rec.pu)} × ${fmt(rec.vohU)} = ${fmt(rec.pu * rec.vohU)}</div>
+      <div>One-off overheads (this episode): ${fmt(rec.fohOneOff)}</div>
+      <div>Factory Overheads = ${fmt(rec.fixedFOH)} + ${fmt(rec.pu * rec.vohU)} + ${fmt(rec.fohOneOff)} = ${fmt(rec.FOH)}</div>
+      <details>
+        <summary>Advanced details</summary>
+        <div class="muted" style="margin-top:6px;">
+          One-off overheads reflect the specific decision you selected for that episode.
+        </div>
+      </details>
+    `);
+
+    addRow("Cost of Production", rec.COP, `
+      <div>COP = Prime Cost + Factory Overheads</div>
+      <div>= ${fmt(rec.prime)} + ${fmt(rec.FOH)} = ${fmt(rec.COP)}</div>
+    `);
+
+    t.innerHTML = `
+      <thead><tr><th>Particulars</th><th>Amount</th></tr></thead>
+      <tbody>${rows.join("")}</tbody>
+    `;
+
+    [...t.querySelectorAll("tr.clickable")].forEach(tr => {
+      tr.addEventListener("click", () => {
+        const id = tr.getAttribute("data-work");
+        const workRow = $(id);
+        const caret = tr.querySelector(".caret");
+        const open = !workRow.classList.contains("hidden");
+        workRow.classList.toggle("hidden");
+        caret.textContent = open ? "▶" : "▼";
+      });
+    });
+  }
+
+  // ---------- End States ----------
+  function endGameOver(reason) {
+    $("revealBox").classList.add("hidden");
+    $("gameOverBox").classList.remove("hidden");
+
+    $("gameOverText").innerHTML = `
+      <p class="danger"><b>Reason:</b> ${escapeHtml(reason)}</p>
+      <p class="muted mono">
+        Snapshot: Total COP ${fmt(state.totalCOP)} | Scrap ${fmt(state.scrapRate*100)}% | Quality risk ${state.qualityRisk}
+      </p>
+    `;
+
+    $("retryBtn").onclick = () => { resetState(); showPreEpisode(); };
+    updateRightPanel();
+  }
+
+  function endSeasonComplete() {
+    $("revealBox").classList.add("hidden");
+    $("seasonCompleteBox").classList.remove("hidden");
+
+    const your = state.totalCOP;
+    const best = BEST_COP;
+    const dev = ((your - best) / best) * 100;
+
+    $("seasonSummary").innerHTML = `
+      <p class="mono">
+        <b>Total COP (Ep2–Ep8):</b> ${fmt(state.totalCOP)}<br/>
+        <b>Final scrap rate:</b> ${fmt(state.scrapRate*100)}%<br/>
+        <b>Final quality risk:</b> ${state.qualityRisk}
+      </p>
+      <p class="muted small">Video deep dive appears only here (not on Game Over).</p>
+    `;
+
+    $("yourCop").textContent = fmt(your);
+    $("bestCop").textContent = fmt(best);
+    $("deviation").textContent = `${dev >= 0 ? "+" : ""}${fmt(dev)}%`;
+    $("endStatus").innerHTML = `Targets met: Yes (all episodes)<br/>Scrap: ${fmt(state.scrapRate*100)}%<br/>Quality risk: ${state.qualityRisk}`;
+
+    $("videoBtn").onclick = () => alert("Video deep dive (placeholder). Add your embed/link here later.");
+    $("playAgainBtn").onclick = () => { resetState(); showPreEpisode(); };
+    $("shareBtn").onclick = () => shareResult(your, dev);
+
+    updateRightPanel();
+  }
+
+  // ---------- Share (Web Share API + clipboard fallback) ----------
+  function shareText(your, dev) {
+    return `I finished Manufacturing Adventure (Season 1)!\n` +
+      `Total COP: ${fmt(your)} | Scrap: ${fmt(state.scrapRate*100)}% | Quality risk: ${state.qualityRisk}\n` +
+      `Best COP is ${fmt(BEST_COP)} (I’m ${dev >= 0 ? "+" : ""}${fmt(dev)}%). Can you beat me?`;
+  }
+
+  async function shareResult(your, dev) {
+    const text = shareText(your, dev);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Manufacturing Adventure — Season 1",
+          text: text,
+          url: SHARE_URL
+        });
+        toast("Shared!");
+        return;
+      } catch (e) {
+        // user cancel or unsupported; fall back
+      }
+    }
+
+    const clip = `${text}\n${SHARE_URL}`;
+    try {
+      await navigator.clipboard.writeText(clip);
+      toast("Copied share text!");
+    } catch (e) {
+      window.prompt("Copy your result:", clip);
+    }
+  }
+
+  // ---------- Helpers ----------
+  function escapeHtml(s) {
+    return (s ?? "").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  // ---------- Wiring / Boot ----------
+  $("startSeasonBtn").onclick = () => showEpisodeScreen();
+
+  resetState();
+  showPreEpisode();
+
+})();
+</script>
+</body>
+</html>
