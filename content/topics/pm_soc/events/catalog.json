@@ -1,29 +1,27 @@
-{
-  "events": [
-    {
-      "id": "quality_upgrade",
-      "label": "Quality upgrade program",
-      "notes": ["Quality upgrade reduces scrap and risk."],
-      "effects": [
-        { "path": "scrapRate", "op": "add", "value": -0.005 },
-        { "path": "qualityRisk", "op": "add", "value": -1 }
-      ]
-    },
-    {
-      "id": "supplier_delay",
-      "label": "Supplier delay & rush freight",
-      "notes": ["Rush freight increases overhead this run."],
-      "effects": [
-        { "path": "totalCOP", "op": "add", "value": 1200 }
-      ]
-    },
-    {
-      "id": "minor_breakdown",
-      "label": "Minor machine breakdown",
-      "notes": ["Breakdown increases scrap for this run."],
-      "effects": [
-        { "path": "scrapRate", "op": "add", "value": 0.004 }
-      ]
-    }
-  ]
-}
+[
+  {
+    "id": "quality_upgrade",
+    "label": "Quality upgrade program",
+    "notes": ["Quality upgrade reduces scrap and risk."],
+    "effects": [
+      { "path": "scrapRate", "op": "add", "value": -0.005 },
+      { "path": "qualityRisk", "op": "add", "value": -1 }
+    ]
+  },
+  {
+    "id": "supplier_delay",
+    "label": "Supplier delay & rush freight",
+    "notes": ["Rush freight increases overhead this run."],
+    "effects": [
+      { "path": "totalCOP", "op": "add", "value": 1200 }
+    ]
+  },
+  {
+    "id": "minor_breakdown",
+    "label": "Minor machine breakdown",
+    "notes": ["Breakdown increases scrap for this run."],
+    "effects": [
+      { "path": "scrapRate", "op": "add", "value": 0.004 }
+    ]
+  }
+]
