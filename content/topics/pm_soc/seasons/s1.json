@@ -1,47 +1,15 @@
 {
   "id": "s1",
-  "seasonLabel": "Season 1 (Scaffold)",
+  "seasonLabel": "Season 1 (PM SOC)",
   "episodes": [
     {
       "ep": 1,
-      "title": "Episode 1 — Test episode",
-      "story": "This is a scaffold episode. Choosing an option applies data-driven effects.",
+      "title": "Episode 1 — Set up your factory",
+      "story": "Scaffold placeholder. Will be replaced by the real PM Season 1 episode list.",
       "options": [
-        {
-          "key": "A",
-          "text": "Safe choice (no risk).",
-          "effects": [
-            { "op": "add", "path": "totalCOP", "value": 1000 }
-          ]
-        },
-        {
-          "key": "B",
-          "text": "Cheap choice (adds scrap + risk).",
-          "effects": [
-            { "op": "add", "path": "totalCOP", "value": 200 },
-            { "op": "add", "path": "scrapRate", "value": 0.01 },
-            { "op": "add", "path": "qualityRisk", "value": 1 },
-            { "op": "set", "path": "flags.choseCheapSupplier", "value": true }
-          ],
-          "oneOffFOH": 800
-        },
-        {
-          "key": "C",
-          "text": "Fix-it choice (conditional benefit).",
-          "effects": [
-            {
-              "if": { "path": "flags.choseCheapSupplier", "op": "==", "value": true },
-              "then": [
-                { "op": "add", "path": "qualityRisk", "value": -1 },
-                { "op": "add", "path": "scrapRate", "value": -0.005 },
-                { "op": "note", "text": "Because you chose the cheap supplier earlier, this helps." }
-              ],
-              "else": [
-                { "op": "note", "text": "No benefit because supplier quality wasn’t the root cause." }
-              ]
-            }
-          ]
-        }
+        { "key": "A", "text": "Scaffold A", "effects": [] },
+        { "key": "B", "text": "Scaffold B", "effects": [] },
+        { "key": "C", "text": "Scaffold C", "effects": [] }
       ]
     }
   ]
