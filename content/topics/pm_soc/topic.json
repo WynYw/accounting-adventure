@@ -1,0 +1,33 @@
+{
+  "id": "pm_soc",
+  "title": "Manufacturing Adventure",
+  "subtitle": "Statement of Cost Focus (Scaffold)",
+  "ui": {
+    "renderer": "socTable",
+    "kpis": [
+      { "id": "totalCOP", "label": "Total COP", "format": "number" },
+      { "id": "qualityRisk", "label": "Quality risk", "format": "int" },
+      { "id": "scrapRate", "label": "Scrap", "format": "percent" }
+    ]
+  },
+  "baseState": {
+    "ep": 1,
+    "totalCOP": 0,
+    "scrapRate": 0,
+    "qualityRisk": 0,
+    "flags": { "choseCheapSupplier": false }
+  },
+  "dailyMode": {
+    "enabled": true,
+    "timezone": "Asia/Kuala_Lumpur",
+    "seedKey": "pm_soc",
+    "modifiers": [
+      { "path": "totalCOP", "kind": "add", "min": 0, "max": 5000, "round": 0 },
+      { "path": "scrapRate", "kind": "add", "min": 0.0, "max": 0.01, "round": 3 }
+    ],
+    "events": {
+      "catalogPath": "/content/events/pm_soc.json",
+      "count": 1
+    }
+  }
+}
