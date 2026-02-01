@@ -1,14 +1,11 @@
-# Start page (handle /start and /start/)
- /start    /start.html  200
- /start/   /start.html  200
- /start/*  /start.html  200
- /         /start.html  200
+/        /start.html  200
+/start   /start.html  200
+/start/  /start.html  200
+/start/* /start.html  200
 
-# Engine runner (handle /play and /play/)
- /play     /play.html   200
- /play/    /play.html   200
- /play/*   /play.html   200
+/play    /play.html   200
+/play/   /play.html   200
+/play/*  /play.html   200
 
-# Keep old routes working
- /fa/*     /FAseason1.html  200
- /pm/*     /PMseason1.html  200
+/fa/*    /FAseason1.html  200
+/pm/*    /PMseason1.html  200
