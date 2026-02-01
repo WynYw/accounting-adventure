@@ -1,11 +1,6 @@
-/        /start.html  200
-/start   /start.html  200
-/start/  /start.html  200
-/start/* /start.html  200
+# Send homepage to /start (Cloudflare will serve start.html at /start)
+ /   /start  302
 
-/play    /play.html   200
-/play/   /play.html   200
-/play/*  /play.html   200
-
-/fa/*    /FAseason1.html  200
-/pm/*    /PMseason1.html  200
+# Keep old routes working
+/fa/*  /FAseason1.html  200
+/pm/*  /PMseason1.html  200
