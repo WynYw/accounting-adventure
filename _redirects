@@ -1,13 +1,12 @@
-# New universal runner (rewrite)
-/play    /play.html   200
-/play/*  /play.html   200
+# Serve the Start page at / and /start (no redirect loops)
+/start.html   /start.html  200
+/start        /start.html  200
+/             /start.html  200
 
-# (Optional) pretty URL for start page
-/start   /start.html  200
+# New engine runner
+/play         /play.html   200
+/play/*       /play.html   200
 
-# Default homepage redirect
-/        /start.html  302
-
-# Keep old routes working (backward compatibility)
-/fa/*    /FAseason1.html  200
-/pm/*    /PMseason1.html  200
+# Keep old routes working
+/fa/*         /FAseason1.html  200
+/pm/*         /PMseason1.html  200
