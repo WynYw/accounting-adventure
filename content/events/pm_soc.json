@@ -1,0 +1,22 @@
+[
+  {
+    "id": "supplier_delay",
+    "title": "Supplier delay",
+    "weight": 3,
+    "effects": [
+      { "op": "add", "path": "scrapRate", "value": 0.005 },
+      { "op": "add", "path": "qualityRisk", "value": 1 },
+      { "op": "note", "text": "Supplier delay increases waste and complaints." }
+    ]
+  },
+  {
+    "id": "quality_upgrade",
+    "title": "Quality upgrade program",
+    "weight": 1,
+    "effects": [
+      { "op": "add", "path": "scrapRate", "value": -0.005 },
+      { "op": "add", "path": "qualityRisk", "value": -1 },
+      { "op": "note", "text": "Quality upgrade reduces scrap and risk." }
+    ]
+  }
+]
