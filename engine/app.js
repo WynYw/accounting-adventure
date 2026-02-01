@@ -5,7 +5,11 @@ import { loadEventCatalog, pickEventsDeterministic, applyPickedEvents } from "./
 const app = document.getElementById("app");
 
 function esc(s) {
-  return (s ?? "").toString().replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  return (s ?? "")
+    .toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 async function loadJson(path) {
@@ -19,16 +23,15 @@ function getParams() {
   return {
     topic: qs.get("topic") || "pm_soc",
     season: qs.get("season") || "s1",
-    mode: qs.get("mode") || "normal" // normal | daily
+    mode: qs.get("mode") || "normal", // normal | daily
   };
 }
 
 function applyDailyModifiers(state, seed, dailyMode) {
   const rng = mulberry32(hashString(seed + "|mods"));
-  for (const m of (dailyMode.modifiers ?? [])) {
+  for (const m of dailyMode.modifiers ?? []) {
     const r = m.min + rng() * (m.max - m.min);
 
-    // support dotted paths on top-level + nested (simple)
     const parts = m.path.split(".");
     let cur = state;
     for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
@@ -40,7 +43,6 @@ function applyDailyModifiers(state, seed, dailyMode) {
     if (m.kind === "mult") nextVal = currentVal * r;
     if (m.kind === "add") nextVal = currentVal + r;
 
-    // rounding: round=0 means integer; round=3 means 3 dp, etc.
     if (typeof m.round === "number") {
       const p = Math.pow(10, m.round);
       nextVal = Math.round(nextVal * p) / p;
@@ -48,9 +50,13 @@ function applyDailyModifiers(state, seed, dailyMode) {
 
     cur[last] = nextVal;
   }
+}
 
-  // enforce your scrap guardrails if present
+function clampState(state) {
+  // Clamp common fields so daily modifiers/events never show negative nonsense
   if (typeof state.scrapRate === "number") state.scrapRate = clampPercent01(state.scrapRate);
+  if (typeof state.qualityRisk === "number") state.qualityRisk = Math.max(0, Math.round(state.qualityRisk));
+  if (typeof state.totalCOP === "number") state.totalCOP = Math.max(0, Math.round(state.totalCOP));
 }
 
 function renderError(e) {
@@ -73,17 +79,20 @@ function renderLoading(msg) {
 }
 
 function renderMiniGame({ topic, season, state, runNotes }) {
-  // Very small “proof” loop: render current episode, apply data effects, show notes.
-  const epObj = season.episodes.find(e => e.ep === state.ep);
+  const epObj = season.episodes.find((e) => e.ep === state.ep);
 
-  const kpiHtml = (topic.ui?.kpis ?? []).map(k => {
-    const val = state[k.id];
-    let shown = val;
-    if (k.format === "percent") shown = `${(Number(val ?? 0) * 100).toFixed(2)}%`;
-    if (k.format === "int") shown = `${parseInt(val ?? 0, 10)}`;
-    if (k.format === "number") shown = `${Number(val ?? 0).toLocaleString()}`;
-    return `<span class="mono"><b>${esc(k.label)}:</b> ${esc(shown)}</span>`;
-  }).join(" &nbsp; • &nbsp; ");
+  const kpiHtml = (topic.ui?.kpis ?? [])
+    .map((k) => {
+      const val = state[k.id];
+      let shown = val;
+
+      if (k.format === "percent") shown = `${(Number(val ?? 0) * 100).toFixed(2)}%`;
+      if (k.format === "int") shown = `${parseInt(val ?? 0, 10)}`;
+      if (k.format === "number") shown = `${Number(val ?? 0).toLocaleString()}`;
+
+      return `<span class="mono"><b>${esc(k.label)}:</b> ${esc(shown)}</span>`;
+    })
+    .join(" &nbsp; • &nbsp; ");
 
   app.innerHTML = `
     <div class="card">
@@ -103,7 +112,13 @@ function renderMiniGame({ topic, season, state, runNotes }) {
 
       <div class="reveal" id="reveal">
         <h3 style="margin-bottom:6px;">Reveal</h3>
-        <div class="small mono" id="revealText">${runNotes.length ? runNotes.map(n => `• ${esc(n)}`).join("<br/>") : "<span class='muted'>Choose an option to see effects.</span>"}</div>
+        <div class="small mono" id="revealText">
+          ${
+            runNotes.length
+              ? runNotes.map((n) => `• ${esc(n)}`).join("<br/>")
+              : "<span class='muted'>Choose an option to see effects.</span>"
+          }
+        </div>
         <div class="hr"></div>
         <div class="btns">
           <button class="primary" id="nextBtn">Next Episode</button>
@@ -114,31 +129,27 @@ function renderMiniGame({ topic, season, state, runNotes }) {
   `;
 
   const choices = document.getElementById("choices");
-  (epObj?.options ?? []).forEach(opt => {
+  (epObj?.options ?? []).forEach((opt) => {
     const b = document.createElement("button");
     b.textContent = `Option ${opt.key}: ${opt.text}`;
     b.onclick = () => {
       runNotes.length = 0;
 
-      // apply persistent effects
       applyEffects(state, opt.effects, runNotes);
 
-      // apply one-off overhead as a generic field (for testing only)
       if (typeof opt.oneOffFOH === "number") {
         state.totalCOP = Number(state.totalCOP ?? 0) + opt.oneOffFOH;
         runNotes.push(`One-off FOH applied: +${opt.oneOffFOH}`);
       }
 
-      // clamp scrap if present
-      if (typeof state.scrapRate === "number") state.scrapRate = clampPercent01(state.scrapRate);
-
+      clampState(state);
       renderMiniGame({ topic, season, state, runNotes });
     };
     choices.appendChild(b);
   });
 
   document.getElementById("nextBtn").onclick = () => {
-    const maxEp = Math.max(...season.episodes.map(e => e.ep));
+    const maxEp = Math.max(...season.episodes.map((e) => e.ep));
     state.ep = Math.min(maxEp, state.ep + 1);
     runNotes.length = 0;
     renderMiniGame({ topic, season, state, runNotes });
@@ -146,8 +157,9 @@ function renderMiniGame({ topic, season, state, runNotes }) {
 
   document.getElementById("restartBtn").onclick = () => {
     const fresh = deepCopy(topic.baseState);
-    Object.keys(state).forEach(k => delete state[k]);
+    Object.keys(state).forEach((k) => delete state[k]);
     Object.assign(state, fresh);
+    clampState(state);
     runNotes.length = 0;
     renderMiniGame({ topic, season, state, runNotes });
   };
@@ -162,10 +174,7 @@ function renderMiniGame({ topic, season, state, runNotes }) {
 
     renderLoading(`Loading ${topicId}/${seasonId}…`);
 
-    const [topic, season] = await Promise.all([
-      loadJson(topicPath),
-      loadJson(seasonPath)
-    ]);
+    const [topic, season] = await Promise.all([loadJson(topicPath), loadJson(seasonPath)]);
 
     const state = deepCopy(topic.baseState);
     const runNotes = [];
@@ -175,14 +184,13 @@ function renderMiniGame({ topic, season, state, runNotes }) {
         timezone: topic.dailyMode.timezone || "UTC",
         seedKey: topic.dailyMode.seedKey || topicId,
         topicId,
-        seasonId
+        seasonId,
       });
 
       runNotes.push(`Daily seed: ${seed}`);
 
       applyDailyModifiers(state, seed, topic.dailyMode);
 
-      // Optional events (only if catalogPath exists)
       if (topic.dailyMode.events?.catalogPath) {
         const catalog = await loadEventCatalog(topic.dailyMode.events.catalogPath);
         const picks = pickEventsDeterministic(seed, catalog, topic.dailyMode.events.count ?? 1);
@@ -190,8 +198,8 @@ function renderMiniGame({ topic, season, state, runNotes }) {
       }
     }
 
+    clampState(state);
     renderMiniGame({ topic, season, state, runNotes });
-
   } catch (e) {
     renderError(e);
   }
