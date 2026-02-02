@@ -3,14 +3,6 @@
 /start      /index.html       200
 /start/     /index.html       200
 
-# Manufacturing (PM) - support clean URL + file URL + old folder routes
-/PMseason1        /PMseason1.html   200
-/PMseason1/       /PMseason1.html   200
-/PMseason1.html   /PMseason1.html   200
-/pm/*             /PMseason1.html   200
-
-# Financial Accounting (FA) - same pattern
-/FAseason1        /FAseason1.html   200
-/FAseason1/       /FAseason1.html   200
-/FAseason1.html   /FAseason1.html   200
-/fa/*             /FAseason1.html   200
+# Backward compatible old routes only
+/pm/*       /PMseason1.html   200
+/fa/*       /FAseason1.html   200
