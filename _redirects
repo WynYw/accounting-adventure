@@ -1,8 +1,1 @@
-# Start page
-/           /index.html       200
-/start      /index.html       200
-/start/     /index.html       200
-
-# Backward compatible old routes only
-/pm/*       /PMseason1.html   200
-/fa/*       /FAseason1.html   200
+/  /index.html  200
