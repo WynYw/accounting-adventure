@@ -7,8 +7,6 @@
   <style>
     :root{
       --bg:#0b1220;
-      --panel:#0f1a33;
-      --panel2:#101d3a;
       --border:rgba(255,255,255,.10);
       --text:rgba(255,255,255,.92);
       --muted:rgba(255,255,255,.68);
@@ -24,47 +22,25 @@
       color:var(--text);
       min-height:100vh;
     }
-    .wrap{
-      max-width:1000px;
-      margin:0 auto;
-      padding:36px 18px 48px;
-    }
-    .header{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-bottom:22px;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
+    .wrap{ max-width:1000px; margin:0 auto; padding:36px 18px 48px; }
+    .header{ display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+    .brand{ display:flex; align-items:center; gap:12px; }
     .logo{
       width:44px;height:44px;border-radius:14px;
       background: linear-gradient(135deg, rgba(120,160,255,.95), rgba(90,220,160,.85));
       box-shadow: 0 10px 40px rgba(0,0,0,.35);
     }
-    h1{
-      margin:0;
-      font-size:28px;
-      letter-spacing:.2px;
-    }
-    .sub{
-      margin:0;
-      color:var(--muted);
-      line-height:1.5;
-      max-width:800px;
-    }
+    h1{ margin:0; font-size:28px; letter-spacing:.2px; }
+    .sub{ margin:0; color:var(--muted); line-height:1.5; max-width:800px; }
+
     .grid{
       display:grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap:14px;
       margin-top:18px;
     }
-    @media (max-width: 900px){
-      .grid{grid-template-columns:1fr}
-    }
+    @media (max-width: 900px){ .grid{grid-template-columns:1fr} }
+
     .card{
       position:relative;
       border:1px solid var(--border);
@@ -74,10 +50,7 @@
       box-shadow: 0 18px 70px rgba(0,0,0,.35);
       transition: transform .12s ease, border-color .12s ease;
     }
-    .card:hover{
-      transform: translateY(-2px);
-      border-color: rgba(120,160,255,.35);
-    }
+    .card:hover{ transform: translateY(-2px); border-color: rgba(120,160,255,.35); }
     .card a{
       display:block;
       padding:18px 18px 16px;
@@ -109,17 +82,8 @@
       box-shadow: 0 0 0 6px rgba(120,160,255,.06);
       font-size:22px;
     }
-    .title{
-      margin:0;
-      font-size:18px;
-      letter-spacing:.2px;
-    }
-    .desc{
-      margin:8px 0 0;
-      color:var(--muted);
-      line-height:1.45;
-      font-size:14px;
-    }
+    .title{ margin:0; font-size:18px; letter-spacing:.2px; }
+    .desc{ margin:8px 0 0; color:var(--muted); line-height:1.45; font-size:14px; }
     .cta{
       margin-top:14px;
       display:flex;
@@ -129,13 +93,7 @@
       color:rgba(255,255,255,.85);
       font-size:14px;
     }
-    .ctaRow{
-      margin-top:12px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
+    .ctaRow{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .miniLink{
       display:inline-flex;
       align-items:center;
@@ -148,23 +106,17 @@
       color: rgba(255,255,255,.88);
       font-size:13px;
     }
-    .miniLink:hover{
-      border-color: rgba(120,160,255,.35);
-    }
+    .miniLink:hover{ border-color: rgba(120,160,255,.35); }
     .arrow{
       width:34px;height:34px;border-radius:12px;
       display:grid;place-items:center;
       background: rgba(255,255,255,.04);
       border:1px solid var(--border);
     }
-    .disabled{
-      opacity:.60;
-      filter:saturate(.8);
-    }
-    .disabled a{
-      cursor:not-allowed;
-    }
-    .disabled:hover{transform:none;border-color:var(--border)}
+    .disabled{ opacity:.60; filter:saturate(.8); }
+    .disabled a{ cursor:not-allowed; }
+    .disabled:hover{ transform:none; border-color:var(--border) }
+
     .footer{
       margin-top:18px;
       padding:14px 16px;
@@ -174,23 +126,17 @@
       line-height:1.55;
       background: rgba(255,255,255,.02);
     }
-    .small{
-      font-size:13px;
-    }
-    .links{
-      margin-top:8px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+    .small{ font-size:13px; }
+    .links{ margin-top:8px; display:flex; gap:10px; flex-wrap:wrap; }
     .links a{
       color: rgba(120,160,255,.95);
       text-decoration:none;
       border-bottom:1px dotted rgba(120,160,255,.45);
     }
-    .links a:hover{border-bottom-style:solid}
+    .links a:hover{ border-bottom-style:solid }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="header">
@@ -206,7 +152,7 @@
     <div class="grid">
       <!-- Tile 1: Manufacturing -->
       <div class="card">
-        <a href="/PMseason1" aria-label="Open Manufacturing (Cost of Production)">
+        <a href="/PMseason1.html" aria-label="Open Manufacturing (Cost of Production)">
           <div class="toprow">
             <div class="icon">🏭</div>
             <div class="pill">Playable now</div>
@@ -221,17 +167,16 @@
           </div>
         </a>
 
-        <!-- “Today’s Run” link -->
         <div style="padding:0 18px 16px;">
           <div class="ctaRow">
-            <a class="miniLink" href="/PMseason1?mode=daily">Today’s Run (Daily)</a>
+            <a class="miniLink" href="/PMseason1.html?mode=daily">Today’s Run (Daily)</a>
           </div>
         </div>
       </div>
 
       <!-- Tile 2: Financial Accounting -->
       <div class="card">
-        <a href="/FAseason1" aria-label="Open Financial Accounting (Balance Sheet)">
+        <a href="/FAseason1.html" aria-label="Open Financial Accounting (Balance Sheet)">
           <div class="toprow">
             <div class="icon">📊</div>
             <div class="pill">Playable now</div>
@@ -271,9 +216,9 @@
         Tip: bookmark this Start page and share it with your group so everyone begins in the same place.
       </div>
       <div class="links small">
-        <a href="/FAseason1">Open Financial Accounting directly</a>
-        <a href="/PMseason1">Open Manufacturing directly</a>
-        <a href="/PMseason1?mode=daily">Open Manufacturing “Today’s Run”</a>
+        <a href="/FAseason1.html">Open Financial Accounting directly</a>
+        <a href="/PMseason1.html">Open Manufacturing directly</a>
+        <a href="/PMseason1.html?mode=daily">Open Manufacturing “Today’s Run”</a>
       </div>
     </div>
   </div>
