@@ -1,22 +1,10 @@
-# ----------------------------
-# Stable routing (original HTML)
-# ----------------------------
+# Home -> Start (redirect ONCE)
+ /  /start  302
 
-# Serve Start page without loops
-/start.html  /start.html  200
-/start       /start.html  200
+# Engine runner (only keep if play.html exists)
+ /play    /play.html   200
+ /play/*  /play.html   200
 
-# Root goes to start
-/           /start.html  302
-
-# Friendly URLs for your original seasons
-/PMseason1  /PMseason1.html  200
-/FAseason1  /FAseason1.html  200
-
-# Keep legacy routes working
-/pm/*       /PMseason1.html  200
-/fa/*       /FAseason1.html  200
-
-# Optional: if people hit the old engine route, send them back to Start
-/play       /start.html  302
-/play/*     /start.html  302
+# Keep your old routes working
+ /fa/*  /FAseason1.html  200
+ /pm/*  /PMseason1.html  200
