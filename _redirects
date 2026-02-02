@@ -1,10 +1,6 @@
-# Home -> Start (redirect ONCE)
- /  /start  302
+/        /start.html     302
+/start   /start.html     200
+/start.html  /start.html 200
 
-# Engine runner (only keep if play.html exists)
- /play    /play.html   200
- /play/*  /play.html   200
-
-# Keep your old routes working
- /fa/*  /FAseason1.html  200
- /pm/*  /PMseason1.html  200
+/fa/*    /FAseason1.html 200
+/pm/*    /PMseason1.html 200
