@@ -1,5 +1,15 @@
-/start  /index.html  200
-/       /index.html  200
+# Start page
+/start    /start.html   200
+/start/   /start.html   200
+/         /start.html   200
 
-/fa/*   /FAseason1.html  200
-/pm/*   /PMseason1.html  200
+# PM Season 1 (support BOTH /PMseason1 and /pm/*)
+#/PMseason1.html will often canonicalize to /PMseason1, so map both.
+ /PMseason1     /PMseason1.html  200
+ /PMseason1/    /PMseason1.html  200
+ /pm/*          /PMseason1.html  200
+
+# FA Season 1 (optional but consistent)
+ /FAseason1     /FAseason1.html  200
+ /FAseason1/    /FAseason1.html  200
+ /fa/*          /FAseason1.html  200
